@@ -26,6 +26,7 @@ struct GameObject
     glm::vec3 forward = glm::vec3(1.f, 0.f, 0.f);
     float fVelocity = 0.01f;
     float fAngularVel = 1.0f;
+    float fScaleVel = 0.001f;
 };
 
 struct ShaderProgram
@@ -46,8 +47,8 @@ void Resize_Window(GLFWwindow* window, int iFrameBufferWidth, int iFrameBufferHe
 std::string Load_File(const std::string& filePath)
 {
     std::ifstream file(filePath);
-    std::string   fileContent;
-    std::string   line;
+    std::string fileContent;
+    std::string line;
 
     //Lanzamos error si el archivo no se ha podido abrir
     if (!file.is_open())
@@ -371,11 +372,10 @@ void main()
             cube.position = cube.position + cube.forward * cube.fVelocity;
             cube.rotation = cube.rotation + glm::vec3(0.f, 1.f, 0.f) * cube.fAngularVel;
 
+            //Movimiento cubo arriba y abajo
             if(cube.position.y >= 0.7f || cube.position.y <= -0.7f){
                 cube.forward = cube.forward * -1.f;
             }
-
-
 
             glm::mat4 cubeRotationMatrix = GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), cube.rotation.y);
             glm::mat4 cubeTranslationMatrix = GenerateTranslationMatrix(cube.position);
@@ -394,11 +394,20 @@ void main()
             //Dibujar ortoedro
             glm::mat4 orthoModelMatrix = glm::mat4(1.0f);
 
+            ortho.rotation = ortho.rotation + glm::vec3(0.f, 0.f, 1.f) * ortho.fAngularVel;
+            ortho.scale = ortho.scale + glm::vec3(1.f, 0.f, 0.f) * ortho.fScaleVel;
+
+            //Escalando continuamente el ortoedro
+            if (ortho.scale.x >= 0.3f || ortho.scale.x <= 0.05f) {
+                ortho.fScaleVel = ortho.fScaleVel * -1.f;
+            }
+            
+            glm::mat4 orthoRotationMatrix = GenerateRotationMatrix(glm::vec3(0.f, 0.f, 1.f), ortho.rotation.z);
             glm::mat4 orthoTranslationMatrix = GenerateTranslationMatrix(ortho.position);
             glm::mat4 orthoScaleMatrix = GenerateScaleMatrix(ortho.scale);
 
             //Aplicamos las matrices
-            orthoModelMatrix = orthoTranslationMatrix * orthoScaleMatrix;
+            orthoModelMatrix = orthoTranslationMatrix * orthoRotationMatrix * orthoScaleMatrix * orthoModelMatrix;
 
             //Pasamos la matrix al shader
             glUniformMatrix4fv(glGetUniformLocation(compiledPrograms[0], "transform"), 1, GL_FALSE, glm::value_ptr(orthoModelMatrix));
