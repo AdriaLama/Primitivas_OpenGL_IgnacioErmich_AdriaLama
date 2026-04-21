@@ -226,6 +226,9 @@ void main()
 
     if (glewInit() == GLEW_OK)
     {
+
+        float tiempo = static_cast<float>(glfwGetTime());
+
         //Declarar instancias de GameObject para cada figura
         GameObject cube;
         GameObject ortho;
@@ -332,14 +335,14 @@ void main()
 
         GLfloat pyramidVertices[] =
         {
-             0.0f, +0.5f,  0.0f, 
-            -0.5f, -0.5f, -0.5f,  
-            +0.5f, -0.5f, -0.5f,  
-             0.0f, +0.5f,  0.0f,  
-            +0.5f, -0.5f, +0.5f,  
-             0.0f, +0.5f,  0.0f,  
-            -0.5f, -0.5f, +0.5f,  
-            -0.5f, -0.5f, -0.5f,  
+             0.0f, +0.5f,  0.0f,
+            -0.5f, -0.5f, -0.5f,
+            +0.5f, -0.5f, -0.5f,
+             0.0f, +0.5f,  0.0f,
+            +0.5f, -0.5f, +0.5f,
+             0.0f, +0.5f,  0.0f,
+            -0.5f, -0.5f, +0.5f,
+            -0.5f, -0.5f, -0.5f,
         };
 
         glBufferData(GL_ARRAY_BUFFER, sizeof(pyramidVertices), pyramidVertices, GL_STATIC_DRAW);
@@ -363,6 +366,8 @@ void main()
         while (!glfwWindowShouldClose(window))
         {
             glfwPollEvents();
+
+            tiempo = static_cast<float>(glfwGetTime());
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -416,17 +421,26 @@ void main()
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 14);
             glBindVertexArray(0);
 
+
+            pyramid.position = pyramid.position + cube.forward * pyramid.fVelocity;
+            pyramid.rotation = pyramid.rotation + glm::vec3(1.f, 1.f, 0.f) * pyramid.fAngularVel;
+
+            if (pyramid.position.y >= 0.7f || pyramid.position.y <= -0.7f) {
+                cube.forward = cube.forward * -1.f;
+            }
             //Dibujar piramide
             glm::mat4 pyramidModelMatrix = glm::mat4(1.0f);
+            glm::mat4 pyramidRotationMatrix = GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), pyramid.rotation.x) * GenerateRotationMatrix(glm::vec3(1.f, 0.f, 0.f), pyramid.rotation.y);
+           
             glm::mat4 pyramidTranslationMatrix = GenerateTranslationMatrix(pyramid.position);
             glm::mat4 pyramidScaleMatrix = GenerateScaleMatrix(pyramid.scale);
 
             //Aplicamos las matrices
-            pyramidModelMatrix = pyramidTranslationMatrix * pyramidScaleMatrix;
-
+            pyramidModelMatrix = pyramidTranslationMatrix * pyramidRotationMatrix * pyramidScaleMatrix * pyramidModelMatrix;
             //Pasamos la matrix al shader
             glUniformMatrix4fv(glGetUniformLocation(compiledPrograms[0], "transform"), 1, GL_FALSE, glm::value_ptr(pyramidModelMatrix));
             glUniform1i(glGetUniformLocation(compiledPrograms[0], "objectID"), 2);
+            glUniform1f(glGetUniformLocation(compiledPrograms[0], "tiempo"), tiempo);
             glBindVertexArray(vaoPyramid);
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 8);
             glBindVertexArray(0);
