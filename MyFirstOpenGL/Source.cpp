@@ -19,6 +19,9 @@ struct GameObject
     glm::vec3 position = glm::vec3(0.f);
     glm::vec3 rotation = glm::vec3(0.f);
     glm::vec3 scale = glm::vec3(1.f);
+    glm::vec3 forward = glm::vec3(0.f, 1.f, 0.f);
+    float fVelocity = 0.01f;
+
 };
 
 struct ShaderProgram
@@ -359,11 +362,17 @@ void main()
             //Dibujar cubo
             glm::mat4 cubeModelMatrix = glm::mat4(1.0f);
 
+            cube.position = cube.position + cube.forward * cube.fVelocity;
+
+            if(cube.position.y >= 0.7f || cube.position.y <= -0.7f){
+                cube.forward = cube.forward * -1.f;
+            }
+
             glm::mat4 cubeTranslationMatrix = GenerateTranslationMatrix(cube.position);
             glm::mat4 cubeScaleMatrix = GenerateScaleMatrix(cube.scale);
 
             //Aplicamos las matrices
-            cubeModelMatrix = cubeTranslationMatrix * cubeScaleMatrix;
+            cubeModelMatrix = cubeTranslationMatrix * cubeScaleMatrix * cubeModelMatrix;
 
             //Pasamos la matrix al shader
             glUniformMatrix4fv(glGetUniformLocation(compiledPrograms[0], "transform"), 1, GL_FALSE, glm::value_ptr(cubeModelMatrix));
