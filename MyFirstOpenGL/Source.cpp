@@ -11,6 +11,10 @@
 #define WINDOW_WIDTH  640
 #define WINDOW_HEIGHT 480
 
+#define ID_CUBO 0
+#define ID_ORTOEDRO 1
+#define ID_PIRAMIDE 2
+
 std::vector<GLuint> compiledPrograms;
 
 //Struct para controlar cada figura de la escena
@@ -19,9 +23,9 @@ struct GameObject
     glm::vec3 position = glm::vec3(0.f);
     glm::vec3 rotation = glm::vec3(0.f);
     glm::vec3 scale = glm::vec3(1.f);
-    glm::vec3 forward = glm::vec3(0.f, 1.f, 0.f);
+    glm::vec3 forward = glm::vec3(1.f, 0.f, 0.f);
     float fVelocity = 0.01f;
-
+    float fAngularVel = 1.0f;
 };
 
 struct ShaderProgram
@@ -231,6 +235,8 @@ void main()
         ortho.position = glm::vec3(0.0f, 0.f, 0.f);
         pyramid.position = glm::vec3(0.55f, 0.f, 0.f);
 
+        cube.forward = glm::vec3(0.f, 1.f, 0.f);
+
         //Escala uniforme para cubo y piramide
         cube.scale = glm::vec3(0.3f, 0.3f, 0.3f);
         //Ortoedro: mas alto que ancho para diferenciarse visualmente del cubo
@@ -363,20 +369,24 @@ void main()
             glm::mat4 cubeModelMatrix = glm::mat4(1.0f);
 
             cube.position = cube.position + cube.forward * cube.fVelocity;
+            cube.rotation = cube.rotation + glm::vec3(0.f, 1.f, 0.f) * cube.fAngularVel;
 
             if(cube.position.y >= 0.7f || cube.position.y <= -0.7f){
                 cube.forward = cube.forward * -1.f;
             }
 
+
+
+            glm::mat4 cubeRotationMatrix = GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), cube.rotation.y);
             glm::mat4 cubeTranslationMatrix = GenerateTranslationMatrix(cube.position);
             glm::mat4 cubeScaleMatrix = GenerateScaleMatrix(cube.scale);
 
             //Aplicamos las matrices
-            cubeModelMatrix = cubeTranslationMatrix * cubeScaleMatrix * cubeModelMatrix;
+            cubeModelMatrix = cubeTranslationMatrix * cubeRotationMatrix * cubeScaleMatrix * cubeModelMatrix;
 
             //Pasamos la matrix al shader
             glUniformMatrix4fv(glGetUniformLocation(compiledPrograms[0], "transform"), 1, GL_FALSE, glm::value_ptr(cubeModelMatrix));
-
+            glUniform1i(glGetUniformLocation(compiledPrograms[0], "objectID"), 0);
             glBindVertexArray(vaoCube);
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 14);
             glBindVertexArray(0);
@@ -392,7 +402,7 @@ void main()
 
             //Pasamos la matrix al shader
             glUniformMatrix4fv(glGetUniformLocation(compiledPrograms[0], "transform"), 1, GL_FALSE, glm::value_ptr(orthoModelMatrix));
-
+            glUniform1i(glGetUniformLocation(compiledPrograms[0], "objectID"), 1);
             glBindVertexArray(vaoOrtho);
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 14);
             glBindVertexArray(0);
@@ -407,7 +417,7 @@ void main()
 
             //Pasamos la matrix al shader
             glUniformMatrix4fv(glGetUniformLocation(compiledPrograms[0], "transform"), 1, GL_FALSE, glm::value_ptr(pyramidModelMatrix));
-
+            glUniform1i(glGetUniformLocation(compiledPrograms[0], "objectID"), 2);
             glBindVertexArray(vaoPyramid);
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 8);
             glBindVertexArray(0);
