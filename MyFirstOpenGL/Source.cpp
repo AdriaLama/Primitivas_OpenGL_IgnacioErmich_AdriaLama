@@ -228,22 +228,24 @@ void main()
     {
 
         float tiempo = static_cast<float>(glfwGetTime());
+        bool bPaused = false;
+        bool bSpaceWasPressed = false; 
+        bool bMWasPressed = false;
+        bool bNWasPressed = false;
 
         //Declarar instancias de GameObject para cada figura
         GameObject cube;
         GameObject ortho;
         GameObject pyramid;
 
-        //Posicionamos cada figura en su lugar de la ventana
         cube.position = glm::vec3(-0.55f, 0.f, 0.f);
         ortho.position = glm::vec3(0.0f, 0.f, 0.f);
         pyramid.position = glm::vec3(0.55f, 0.f, 0.f);
 
         cube.forward = glm::vec3(0.f, 1.f, 0.f);
+        pyramid.forward = glm::vec3(0.f, 1.f, 0.f);
 
-        //Escala uniforme para cubo y piramide
         cube.scale = glm::vec3(0.3f, 0.3f, 0.3f);
-        //Ortoedro: mas alto que ancho para diferenciarse visualmente del cubo
         ortho.scale = glm::vec3(0.15f, 0.27f, 0.15f);
         pyramid.scale = glm::vec3(0.3f, 0.3f, 0.3f);
 
@@ -336,13 +338,27 @@ void main()
         GLfloat pyramidVertices[] =
         {
              0.0f, +0.5f,  0.0f,
-            -0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f, +0.5f,
+            +0.5f, -0.5f, +0.5f,
+
+             0.0f, +0.5f,  0.0f,
             +0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
+
              0.0f, +0.5f,  0.0f,
             +0.5f, -0.5f, +0.5f,
+            +0.5f, -0.5f, -0.5f,
+
              0.0f, +0.5f,  0.0f,
-            -0.5f, -0.5f, +0.5f,
             -0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f, +0.5f,
+
+            -0.5f, -0.5f, -0.5f,
+            +0.5f, -0.5f, -0.5f,
+            +0.5f, -0.5f, +0.5f,
+            -0.5f, -0.5f, -0.5f,
+            +0.5f, -0.5f, +0.5f,
+            -0.5f, -0.5f, +0.5f,
         };
 
         glBufferData(GL_ARRAY_BUFFER, sizeof(pyramidVertices), pyramidVertices, GL_STATIC_DRAW);
@@ -368,6 +384,43 @@ void main()
             glfwPollEvents();
 
             tiempo = static_cast<float>(glfwGetTime());
+
+            //Pausar y reanudar ejecucion programa
+            bool bSpaceIsPressed = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+            if (bSpaceIsPressed && !bSpaceWasPressed) {
+                bPaused = !bPaused;
+            }
+            bSpaceWasPressed = bSpaceIsPressed;
+
+            if (bPaused) {
+                glfwSwapBuffers(window);
+                continue;
+            }
+
+            //Acelerar y reducir velocidades de transformaciones
+            bool bMIsPressed = glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS;
+            bool bNIsPressed = glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS;
+
+            if (bMIsPressed && !bMWasPressed) {
+                cube.fVelocity += cube.fVelocity * 0.10f;
+                cube.fAngularVel += cube.fAngularVel * 0.10f;
+                ortho.fScaleVel += ortho.fScaleVel * 0.10f;
+                ortho.fAngularVel += ortho.fAngularVel * 0.10f;
+                pyramid.fVelocity += pyramid.fVelocity * 0.10f;
+                pyramid.fAngularVel += pyramid.fAngularVel * 0.10f;
+            }
+
+            if (bNIsPressed && !bNWasPressed) {
+                cube.fVelocity -= cube.fVelocity * 0.10f;
+                cube.fAngularVel -= cube.fAngularVel * 0.10f;
+                ortho.fScaleVel -= ortho.fScaleVel * 0.10f;
+                ortho.fAngularVel -= ortho.fAngularVel * 0.10f;
+                pyramid.fVelocity -= pyramid.fVelocity * 0.10f;
+                pyramid.fAngularVel -= pyramid.fAngularVel * 0.10f;
+            }
+
+            bMWasPressed = bMIsPressed;
+            bNWasPressed = bNIsPressed;
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -422,16 +475,16 @@ void main()
             glBindVertexArray(0);
 
 
-            pyramid.position = pyramid.position + cube.forward * pyramid.fVelocity;
+            pyramid.position = pyramid.position + pyramid.forward * pyramid.fVelocity;
             pyramid.rotation = pyramid.rotation + glm::vec3(1.f, 1.f, 0.f) * pyramid.fAngularVel;
 
             if (pyramid.position.y >= 0.7f || pyramid.position.y <= -0.7f) {
-                cube.forward = cube.forward * -1.f;
+                pyramid.forward = pyramid.forward * -1.f;
             }
+
             //Dibujar piramide
             glm::mat4 pyramidModelMatrix = glm::mat4(1.0f);
-            glm::mat4 pyramidRotationMatrix = GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), pyramid.rotation.x) * GenerateRotationMatrix(glm::vec3(1.f, 0.f, 0.f), pyramid.rotation.y);
-           
+            glm::mat4 pyramidRotationMatrix = GenerateRotationMatrix(glm::vec3(1.f, 0.f, 0.f), pyramid.rotation.x) * GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), pyramid.rotation.y);
             glm::mat4 pyramidTranslationMatrix = GenerateTranslationMatrix(pyramid.position);
             glm::mat4 pyramidScaleMatrix = GenerateScaleMatrix(pyramid.scale);
 
@@ -442,7 +495,7 @@ void main()
             glUniform1i(glGetUniformLocation(compiledPrograms[0], "objectID"), 2);
             glUniform1f(glGetUniformLocation(compiledPrograms[0], "tiempo"), tiempo);
             glBindVertexArray(vaoPyramid);
-            glDrawArrays(GL_TRIANGLE_STRIP, 0, 8);
+            glDrawArrays(GL_TRIANGLES, 0, 18); 
             glBindVertexArray(0);
 
             glFlush();
