@@ -232,6 +232,17 @@ void main()
         bool bSpaceWasPressed = false; 
         bool bMWasPressed = false;
         bool bNWasPressed = false;
+        bool b1WasPressed = false;
+        bool wireframe = false;
+        bool b2WasPressed = false;
+        bool b3WasPressed = false;
+        bool b4WasPressed = false;
+       
+
+
+        bool showCube = true;
+        bool showOrtho = true;
+        bool showPyramid = true;
 
         //Declarar instancias de GameObject para cada figura
         GameObject cube;
@@ -369,8 +380,10 @@ void main()
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
 
-        //Definimos modo wireframe para ver la estructura 3D
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        //Comprobacion de pulsamiento tecla 1
+      
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
 
         //Indicar a la tarjeta GPU que programa debe usar
         glUseProgram(compiledPrograms[0]);
@@ -384,7 +397,14 @@ void main()
             glfwPollEvents();
 
             tiempo = static_cast<float>(glfwGetTime());
-
+            bool b1IsPressed = glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS;
+            if (b1IsPressed && !b1WasPressed) {
+                wireframe = !wireframe;
+                glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
+                
+            }
+            b1WasPressed = b1IsPressed;
+                         
             //Pausar y reanudar ejecucion programa
             bool bSpaceIsPressed = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
             if (bSpaceIsPressed && !bSpaceWasPressed) {
@@ -422,10 +442,30 @@ void main()
             bMWasPressed = bMIsPressed;
             bNWasPressed = bNIsPressed;
 
+
+
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-            //Dibujar cubo
-            glm::mat4 cubeModelMatrix = glm::mat4(1.0f);
+            //Verificacion apretar tecla 2
+            bool b2IsPressed = glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS;
+            if (b2IsPressed && !b2WasPressed) {
+                showCube = !showCube;
+            }
+            b2WasPressed = b2IsPressed;
+
+            //Verificacion apretar tecla 3
+            bool b3IsPressed = glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS;
+            if (b3IsPressed && !b3WasPressed) {
+                showOrtho = !showOrtho;
+            }
+            b3WasPressed = b3IsPressed;
+
+            //Verificacion apretar tecla 4
+            bool b4IsPressed = glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS;
+            if (b4IsPressed && !b4WasPressed) {
+                showPyramid = !showPyramid;
+            }
+            b4WasPressed = b4IsPressed;
 
             cube.position = cube.position + cube.forward * cube.fVelocity;
             cube.rotation = cube.rotation + glm::vec3(0.f, 1.f, 0.f) * cube.fAngularVel;
@@ -435,6 +475,8 @@ void main()
                 cube.forward = cube.forward * -1.f;
             }
 
+            //Dibujar cubo dependiendo de showCube
+            glm::mat4 cubeModelMatrix = glm::mat4(showCube ?  1.0f : 0.f);
             glm::mat4 cubeRotationMatrix = GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), cube.rotation.y);
             glm::mat4 cubeTranslationMatrix = GenerateTranslationMatrix(cube.position);
             glm::mat4 cubeScaleMatrix = GenerateScaleMatrix(cube.scale);
@@ -450,7 +492,7 @@ void main()
             glBindVertexArray(0);
 
             //Dibujar ortoedro
-            glm::mat4 orthoModelMatrix = glm::mat4(1.0f);
+            
 
             ortho.rotation = ortho.rotation + glm::vec3(0.f, 0.f, 1.f) * ortho.fAngularVel;
             ortho.scale = ortho.scale + glm::vec3(1.f, 0.f, 0.f) * ortho.fScaleVel;
@@ -459,14 +501,15 @@ void main()
             if (ortho.scale.x >= 0.3f || ortho.scale.x <= 0.05f) {
                 ortho.fScaleVel = ortho.fScaleVel * -1.f;
             }
+     
+            //Aplicamos las matrices y dibujamos en funcion de showOrtho
+            glm::mat4 orthoModelMatrix = glm::mat4(showOrtho ? 1.0f : 0.f);
+             glm::mat4 orthoRotationMatrix = GenerateRotationMatrix(glm::vec3(0.f, 0.f, 1.f), ortho.rotation.z);
+             glm::mat4 orthoTranslationMatrix = GenerateTranslationMatrix(ortho.position);
+             glm::mat4 orthoScaleMatrix = GenerateScaleMatrix(ortho.scale);
+             orthoModelMatrix = orthoTranslationMatrix * orthoRotationMatrix * orthoScaleMatrix * orthoModelMatrix;
             
-            glm::mat4 orthoRotationMatrix = GenerateRotationMatrix(glm::vec3(0.f, 0.f, 1.f), ortho.rotation.z);
-            glm::mat4 orthoTranslationMatrix = GenerateTranslationMatrix(ortho.position);
-            glm::mat4 orthoScaleMatrix = GenerateScaleMatrix(ortho.scale);
-
-            //Aplicamos las matrices
-            orthoModelMatrix = orthoTranslationMatrix * orthoRotationMatrix * orthoScaleMatrix * orthoModelMatrix;
-
+ 
             //Pasamos la matrix al shader
             glUniformMatrix4fv(glGetUniformLocation(compiledPrograms[0], "transform"), 1, GL_FALSE, glm::value_ptr(orthoModelMatrix));
             glUniform1i(glGetUniformLocation(compiledPrograms[0], "objectID"), 1);
@@ -482,8 +525,8 @@ void main()
                 pyramid.forward = pyramid.forward * -1.f;
             }
 
-            //Dibujar piramide
-            glm::mat4 pyramidModelMatrix = glm::mat4(1.0f);
+            //Dibujar piramide dependiendo de showPyramid
+            glm::mat4 pyramidModelMatrix = glm::mat4(showPyramid ? 1.0f : 0.f);
             glm::mat4 pyramidRotationMatrix = GenerateRotationMatrix(glm::vec3(1.f, 0.f, 0.f), pyramid.rotation.x) * GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), pyramid.rotation.y);
             glm::mat4 pyramidTranslationMatrix = GenerateTranslationMatrix(pyramid.position);
             glm::mat4 pyramidScaleMatrix = GenerateScaleMatrix(pyramid.scale);
