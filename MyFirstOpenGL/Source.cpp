@@ -1,12 +1,12 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <glm.hpp>
 #include <gtc/type_ptr.hpp>
-#include <gtc/matrix_transform.hpp>
 #include <iostream>
-#include <string>
-#include <fstream>
 #include <vector>
+
+#include "GameObject.h"
+#include "Shader.h"
+#include "Transform.h"
 
 #define WINDOW_WIDTH  640
 #define WINDOW_HEIGHT 480
@@ -17,190 +17,11 @@
 
 std::vector<GLuint> compiledPrograms;
 
-//Struct para controlar cada figura de la escena
-struct GameObject
-{
-    glm::vec3 position = glm::vec3(0.f);
-    glm::vec3 rotation = glm::vec3(0.f);
-    glm::vec3 scale = glm::vec3(1.f);
-    glm::vec3 forward = glm::vec3(1.f, 0.f, 0.f);
-    float fVelocity = 0.01f;
-    float fAngularVel = 1.0f;
-    float fScaleVel = 0.001f;
-};
-
-struct ShaderProgram
-{
-    GLuint vertexShader = 0;
-    GLuint geometryShader = 0;
-    GLuint fragmentShader = 0;
-};
-
 void Resize_Window(GLFWwindow* window, int iFrameBufferWidth, int iFrameBufferHeight)
 {
     //Definir nuevo tamaño del viewport
     glViewport(0, 0, iFrameBufferWidth, iFrameBufferHeight);
     glUniform2f(glGetUniformLocation(compiledPrograms[0], "windowSize"), iFrameBufferWidth, iFrameBufferHeight);
-}
-
-//Funcion que devolvera una string con todo el archivo leido
-std::string Load_File(const std::string& filePath)
-{
-    std::ifstream file(filePath);
-    std::string fileContent;
-    std::string line;
-
-    //Lanzamos error si el archivo no se ha podido abrir
-    if (!file.is_open())
-    {
-        std::cerr << "No se ha podido abrir el archivo: " << filePath << std::endl;
-        std::exit(EXIT_FAILURE);
-    }
-
-    //Leemos el contenido y lo volcamos a la variable auxiliar
-    while (std::getline(file, line))
-    {
-        fileContent += line + "\n";
-    }
-
-    //Cerramos stream de datos y devolvemos contenido
-    file.close();
-    return fileContent;
-}
-
-GLuint LoadFragmentShader(const std::string& filePath)
-{
-    GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-
-    std::string sShaderCode = Load_File(filePath);
-    const char* cShaderSource = sShaderCode.c_str();
-
-    glShaderSource(fragmentShader, 1, &cShaderSource, nullptr);
-    glCompileShader(fragmentShader);
-
-    GLint success;
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-
-    if (success)
-    {
-        return fragmentShader;
-    }
-    else
-    {
-        GLint logLength;
-        glGetShaderiv(fragmentShader, GL_INFO_LOG_LENGTH, &logLength);
-        std::vector<GLchar> errorLog(logLength);
-        glGetShaderInfoLog(fragmentShader, logLength, nullptr, errorLog.data());
-        std::cerr << "Se ha producido un error al cargar el fragment shader: " << errorLog.data() << std::endl;
-        std::exit(EXIT_FAILURE);
-    }
-}
-
-GLuint LoadGeometryShader(const std::string& filePath)
-{
-    GLuint geometryShader = glCreateShader(GL_GEOMETRY_SHADER);
-
-    std::string sShaderCode = Load_File(filePath);
-    const char* cShaderSource = sShaderCode.c_str();
-
-    glShaderSource(geometryShader, 1, &cShaderSource, nullptr);
-    glCompileShader(geometryShader);
-
-    GLint success;
-    glGetShaderiv(geometryShader, GL_COMPILE_STATUS, &success);
-
-    if (success)
-    {
-        return geometryShader;
-    }
-    else
-    {
-        GLint logLength;
-        glGetShaderiv(geometryShader, GL_INFO_LOG_LENGTH, &logLength);
-        std::vector<GLchar> errorLog(logLength);
-        glGetShaderInfoLog(geometryShader, logLength, nullptr, errorLog.data());
-        std::cerr << "Se ha producido un error al cargar el vertex shader: " << errorLog.data() << std::endl;
-        std::exit(EXIT_FAILURE);
-    }
-}
-
-GLuint LoadVertexShader(const std::string& filePath)
-{
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-
-    std::string sShaderCode = Load_File(filePath);
-    const char* cShaderSource = sShaderCode.c_str();
-
-    glShaderSource(vertexShader, 1, &cShaderSource, nullptr);
-    glCompileShader(vertexShader);
-
-    GLint success;
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-
-    if (success)
-    {
-        return vertexShader;
-    }
-    else
-    {
-        GLint logLength;
-        glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &logLength);
-        std::vector<GLchar> errorLog(logLength);
-        glGetShaderInfoLog(vertexShader, logLength, nullptr, errorLog.data());
-        std::cerr << "Se ha producido un error al cargar el vertex shader: " << errorLog.data() << std::endl;
-        std::exit(EXIT_FAILURE);
-    }
-}
-
-//Funcion que dado un struct que contiene los shaders de un programa generara el programa entero de la GPU
-GLuint CreateProgram(const ShaderProgram& shaders)
-{
-    GLuint program = glCreateProgram();
-
-    if (shaders.vertexShader != 0) glAttachShader(program, shaders.vertexShader);
-    if (shaders.geometryShader != 0) glAttachShader(program, shaders.geometryShader);
-    if (shaders.fragmentShader != 0) glAttachShader(program, shaders.fragmentShader);
-
-    glLinkProgram(program);
-
-    GLint success;
-    glGetProgramiv(program, GL_LINK_STATUS, &success);
-
-    if (success)
-    {
-        if (shaders.vertexShader != 0) glDetachShader(program, shaders.vertexShader);
-        if (shaders.geometryShader != 0) glDetachShader(program, shaders.geometryShader);
-        if (shaders.fragmentShader != 0) glDetachShader(program, shaders.fragmentShader);
-
-        return program;
-    }
-    else
-    {
-        GLint logLength;
-        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
-        std::vector<GLchar> errorLog(logLength);
-        glGetProgramInfoLog(program, logLength, nullptr, errorLog.data());
-        std::cerr << "Error al linkar el programa: " << errorLog.data() << std::endl;
-        std::exit(EXIT_FAILURE);
-    }
-}
-
-//Funcion que genera una matriz de traslacion representada por un vector
-glm::mat4 GenerateTranslationMatrix(glm::vec3 translation)
-{
-    return glm::translate(glm::mat4(1.0f), translation);
-}
-
-//Funcion que genera una matriz de rotacion dado un angulo y un vector
-glm::mat4 GenerateRotationMatrix(glm::vec3 axis, float fDegrees)
-{
-    return glm::rotate(glm::mat4(1.0f), glm::radians(fDegrees), glm::normalize(axis));
-}
-
-//Funcion que genera una matriz de escalado representada por un vector
-glm::mat4 GenerateScaleMatrix(glm::vec3 scaleAxis)
-{
-    return glm::scale(glm::mat4(1.0f), scaleAxis);
 }
 
 void main()
@@ -229,7 +50,7 @@ void main()
 
         float tiempo = static_cast<float>(glfwGetTime());
         bool bPaused = false;
-        bool bSpaceWasPressed = false; 
+        bool bSpaceWasPressed = false;
         bool bMWasPressed = false;
         bool bNWasPressed = false;
         bool b1WasPressed = false;
@@ -237,7 +58,7 @@ void main()
         bool b2WasPressed = false;
         bool b3WasPressed = false;
         bool b4WasPressed = false;
-       
+
 
 
         bool showCube = true;
@@ -280,20 +101,20 @@ void main()
 
         GLfloat cubeVertices[] =
         {
-            -0.5f, +0.5f, -0.5f,  
-            +0.5f, +0.5f, -0.5f,  
-            -0.5f, -0.5f, -0.5f,  
-            +0.5f, -0.5f, -0.5f,  
-            +0.5f, -0.5f, +0.5f,  
-            +0.5f, +0.5f, -0.5f,  
-            +0.5f, +0.5f, +0.5f,  
-            -0.5f, +0.5f, -0.5f,  
-            -0.5f, +0.5f, +0.5f,  
-            -0.5f, -0.5f, -0.5f,  
-            -0.5f, -0.5f, +0.5f,  
-            +0.5f, -0.5f, +0.5f,  
-            -0.5f, +0.5f, +0.5f,  
-            +0.5f, +0.5f, +0.5f,  
+            -0.5f, +0.5f, -0.5f,
+            +0.5f, +0.5f, -0.5f,
+            -0.5f, -0.5f, -0.5f,
+            +0.5f, -0.5f, -0.5f,
+            +0.5f, -0.5f, +0.5f,
+            +0.5f, +0.5f, -0.5f,
+            +0.5f, +0.5f, +0.5f,
+            -0.5f, +0.5f, -0.5f,
+            -0.5f, +0.5f, +0.5f,
+            -0.5f, -0.5f, -0.5f,
+            -0.5f, -0.5f, +0.5f,
+            +0.5f, -0.5f, +0.5f,
+            -0.5f, +0.5f, +0.5f,
+            +0.5f, +0.5f, +0.5f,
         };
 
         glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
@@ -381,7 +202,7 @@ void main()
         glBindVertexArray(0);
 
         //Comprobacion de pulsamiento tecla 1
-      
+
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 
@@ -401,10 +222,10 @@ void main()
             if (b1IsPressed && !b1WasPressed) {
                 wireframe = !wireframe;
                 glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
-                
+
             }
             b1WasPressed = b1IsPressed;
-                         
+
             //Pausar y reanudar ejecucion programa
             bool bSpaceIsPressed = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
             if (bSpaceIsPressed && !bSpaceWasPressed) {
@@ -471,12 +292,12 @@ void main()
             cube.rotation = cube.rotation + glm::vec3(0.f, 1.f, 0.f) * cube.fAngularVel;
 
             //Movimiento cubo arriba y abajo
-            if(cube.position.y >= 0.7f || cube.position.y <= -0.7f){
+            if (cube.position.y >= 0.7f || cube.position.y <= -0.7f) {
                 cube.forward = cube.forward * -1.f;
             }
 
             //Dibujar cubo dependiendo de showCube
-            glm::mat4 cubeModelMatrix = glm::mat4(showCube ?  1.0f : 0.f);
+            glm::mat4 cubeModelMatrix = glm::mat4(showCube ? 1.0f : 0.f);
             glm::mat4 cubeRotationMatrix = GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), cube.rotation.y);
             glm::mat4 cubeTranslationMatrix = GenerateTranslationMatrix(cube.position);
             glm::mat4 cubeScaleMatrix = GenerateScaleMatrix(cube.scale);
@@ -492,7 +313,7 @@ void main()
             glBindVertexArray(0);
 
             //Dibujar ortoedro
-            
+
 
             ortho.rotation = ortho.rotation + glm::vec3(0.f, 0.f, 1.f) * ortho.fAngularVel;
             ortho.scale = ortho.scale + glm::vec3(1.f, 0.f, 0.f) * ortho.fScaleVel;
@@ -501,15 +322,15 @@ void main()
             if (ortho.scale.x >= 0.3f || ortho.scale.x <= 0.05f) {
                 ortho.fScaleVel = ortho.fScaleVel * -1.f;
             }
-     
+
             //Aplicamos las matrices y dibujamos en funcion de showOrtho
             glm::mat4 orthoModelMatrix = glm::mat4(showOrtho ? 1.0f : 0.f);
-             glm::mat4 orthoRotationMatrix = GenerateRotationMatrix(glm::vec3(0.f, 0.f, 1.f), ortho.rotation.z);
-             glm::mat4 orthoTranslationMatrix = GenerateTranslationMatrix(ortho.position);
-             glm::mat4 orthoScaleMatrix = GenerateScaleMatrix(ortho.scale);
-             orthoModelMatrix = orthoTranslationMatrix * orthoRotationMatrix * orthoScaleMatrix * orthoModelMatrix;
-            
- 
+            glm::mat4 orthoRotationMatrix = GenerateRotationMatrix(glm::vec3(0.f, 0.f, 1.f), ortho.rotation.z);
+            glm::mat4 orthoTranslationMatrix = GenerateTranslationMatrix(ortho.position);
+            glm::mat4 orthoScaleMatrix = GenerateScaleMatrix(ortho.scale);
+            orthoModelMatrix = orthoTranslationMatrix * orthoRotationMatrix * orthoScaleMatrix * orthoModelMatrix;
+
+
             //Pasamos la matrix al shader
             glUniformMatrix4fv(glGetUniformLocation(compiledPrograms[0], "transform"), 1, GL_FALSE, glm::value_ptr(orthoModelMatrix));
             glUniform1i(glGetUniformLocation(compiledPrograms[0], "objectID"), 1);
@@ -538,7 +359,7 @@ void main()
             glUniform1i(glGetUniformLocation(compiledPrograms[0], "objectID"), 2);
             glUniform1f(glGetUniformLocation(compiledPrograms[0], "tiempo"), tiempo);
             glBindVertexArray(vaoPyramid);
-            glDrawArrays(GL_TRIANGLES, 0, 18); 
+            glDrawArrays(GL_TRIANGLES, 0, 18);
             glBindVertexArray(0);
 
             glFlush();
