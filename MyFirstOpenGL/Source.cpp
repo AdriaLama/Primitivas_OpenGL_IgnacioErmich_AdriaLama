@@ -7,6 +7,7 @@ void main()
     RenderManager* RM = RenderManager::GetInstance();
     TimeManager* TM = TimeManager::GetInstance();
 
+    RM->Init();
     TM->InitDt();
 
     // Creamos la escena y la inicializamos
