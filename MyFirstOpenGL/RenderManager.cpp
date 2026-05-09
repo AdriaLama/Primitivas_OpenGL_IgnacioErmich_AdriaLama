@@ -1,6 +1,7 @@
 #include "RenderManager.h"
 #include <gtc/type_ptr.hpp>
 #include <iostream>
+#include <stb_image.h>
 
 RenderManager* RenderManager::instance = nullptr;
 
@@ -48,6 +49,7 @@ bool RenderManager::Init()
 
     glUseProgram(program);
     glUniform2f(glGetUniformLocation(program, "windowSize"), WINDOW_WIDTH, WINDOW_HEIGHT);
+    glUniform1i(glGetUniformLocation(program, "textureSampler"), 0);
 
     return true;
 }
@@ -228,4 +230,35 @@ void RenderManager::SetupPyramidBuffers()
     glEnableVertexAttribArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+}
+void RenderManager::DrawModel(const Model& model, const glm::mat4& transform)
+{
+    glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(transform));
+    model.Render();
+}
+
+bool RenderManager::LoadTexture(const std::string& filePath)
+{
+    int width, height, nrChannels;
+    unsigned char* textureInfo = stbi_load(filePath.c_str(), &width, &height, &nrChannels, 0);
+    if (!textureInfo)
+    {
+        std::cerr << "No se ha podido cargar la textura: " << filePath << std::endl;
+        return false;
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureInfo);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    stbi_image_free(textureInfo);
+    return true;
 }
