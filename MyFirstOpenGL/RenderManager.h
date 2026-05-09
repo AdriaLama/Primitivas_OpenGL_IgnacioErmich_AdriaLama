@@ -3,8 +3,10 @@
 #include <GLFW/glfw3.h>
 #include <glm.hpp>
 #include <vector>
+#include <string>
 
 #include "Shader.h"
+#include "Model.h"
 
 #define WINDOW_WIDTH  640
 #define WINDOW_HEIGHT 480
@@ -22,9 +24,16 @@ public:
     void ClearBuffers();
     void SwapBuffers();
 
+    // Primitivas del ejercicio anterior
     void DrawCube(const glm::mat4& transform, bool visible);
     void DrawOrtho(const glm::mat4& transform, bool visible);
     void DrawPyramid(const glm::mat4& transform, bool visible, float tiempo);
+
+    // Nuevo: dibuja un modelo OBJ con textura aplicada
+    void DrawModel(const Model& model, const glm::mat4& transform);
+
+    // Nuevo: carga una textura desde disco y la activa en GL_TEXTURE0
+    bool LoadTexture(const std::string& filePath);
 
     void SetWireframe(bool enabled);
 
@@ -39,13 +48,15 @@ private:
 
     GLFWwindow* window = nullptr;
     GLuint program = 0;
+    GLuint texture = 0;   
 
+    // Primitivas
     GLuint vaoCube = 0, vboCube = 0;
     GLuint vaoOrtho = 0, vboOrtho = 0;
     GLuint vaoPyramid = 0, vboPyramid = 0;
 
+    void SetupShaders();
     void SetupCubeBuffers();
     void SetupOrthoBuffers();
     void SetupPyramidBuffers();
-    void SetupShaders();
 };
