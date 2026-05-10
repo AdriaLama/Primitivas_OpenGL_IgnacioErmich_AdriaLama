@@ -1,7 +1,4 @@
 #version 440 core
-uniform vec2 windowSize;
-uniform int objectID;
-#version 440 core
 
 uniform vec2 windowSize;
 uniform sampler2D textureSampler;

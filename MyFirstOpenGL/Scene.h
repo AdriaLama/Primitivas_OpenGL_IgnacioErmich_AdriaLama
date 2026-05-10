@@ -1,5 +1,7 @@
 #pragma once
 #include "GameObject.h"
+#include "Model.h"
+#include <vector>
 
 class Scene
 {
@@ -8,6 +10,8 @@ public:
     void Update(float dt);
 
 private:
+
+    std::vector<Model> models;
     GameObject cube;
     GameObject ortho;
     GameObject pyramid;
