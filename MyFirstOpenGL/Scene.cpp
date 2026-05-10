@@ -15,6 +15,9 @@ void Scene::Setup()
     cube.scale = glm::vec3(0.3f, 0.3f, 0.3f);
     ortho.scale = glm::vec3(0.15f, 0.27f, 0.15f);
     pyramid.scale = glm::vec3(0.3f, 0.3f, 0.3f);
+
+    models.push_back(LoadOBJModel("Assets/Models/troll.obj"));
+
 }
 
 void Scene::Update(float dt)
@@ -138,4 +141,10 @@ void Scene::Render()
     // Piramide
     glm::mat4 pyramidModel = GenerateTranslationMatrix(pyramid.position) * GenerateRotationMatrix(glm::vec3(1.f, 0.f, 0.f), pyramid.rotation.x) * GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), pyramid.rotation.y)* GenerateScaleMatrix(pyramid.scale);
     RM->DrawPyramid(pyramidModel, showPyramid, tiempo);
+
+    for (int i = 0; i < models.size(); i++)
+    {
+        glm::mat4 modelMatrix = GenerateTranslationMatrix(glm::vec3(0.f, 0.f, 0.f)) * GenerateScaleMatrix(glm::vec3(0.3f, 0.3f, 0.3f));
+        RM->DrawModel(models[i], modelMatrix);
+    }
 }

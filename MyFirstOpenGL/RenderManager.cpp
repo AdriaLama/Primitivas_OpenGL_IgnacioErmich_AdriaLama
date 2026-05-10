@@ -41,11 +41,14 @@ bool RenderManager::Init()
     glCullFace(GL_BACK);
     glClearColor(0.f, 0.f, 0.f, 1.f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glEnable(GL_DEPTH_TEST);
 
     SetupShaders();
     SetupCubeBuffers();
     SetupOrthoBuffers();
     SetupPyramidBuffers();
+
+    LoadTexture("Assets/Textures/troll.png");
 
     glUseProgram(program);
     glUniform2f(glGetUniformLocation(program, "windowSize"), WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -240,7 +243,7 @@ void RenderManager::DrawModel(const Model& model, const glm::mat4& transform)
 bool RenderManager::LoadTexture(const std::string& filePath)
 {
     int width, height, nrChannels;
-    unsigned char* textureInfo = stbi_load(filePath.c_str(), &width, &height, &nrChannels, 0);
+    unsigned char* textureInfo = stbi_load(filePath.c_str(), &width, &height, &nrChannels, 4);
     if (!textureInfo)
     {
         std::cerr << "No se ha podido cargar la textura: " << filePath << std::endl;
@@ -262,3 +265,4 @@ bool RenderManager::LoadTexture(const std::string& filePath)
     stbi_image_free(textureInfo);
     return true;
 }
+
