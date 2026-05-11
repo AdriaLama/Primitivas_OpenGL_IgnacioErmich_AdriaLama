@@ -2,6 +2,7 @@
 #include "GameObject.h"
 #include "Model.h"
 #include <vector>
+#include "Camera.h"
 
 class Scene
 {
@@ -17,6 +18,7 @@ private:
     GameObject pyramid;
     GLuint trollTexture;
     GLuint rockTexture;
+    Camera camera;
 
     glm::vec3 trollPositions[3];
     float trollRotations[3];

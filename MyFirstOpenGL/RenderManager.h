@@ -30,7 +30,7 @@ public:
     void DrawPyramid(const glm::mat4& transform, bool visible, float tiempo);
 
     // Nuevo: dibuja un modelo OBJ con textura aplicada
-    void DrawModel(const Model& model, const glm::mat4& transform);
+    void DrawModel(const Model& model, const glm::mat4& transform, glm::mat4 projectionMatrix, glm::mat4 viewMatrix);
 
     // Nuevo: carga una textura desde disco y la activa en GL_TEXTURE0
     GLuint LoadTexture(const std::string& filePath);

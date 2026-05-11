@@ -126,9 +126,10 @@ GLuint RenderManager::GetProgram() const { return program; }
 void RenderManager::SetupShaders()
 {
     ShaderProgram sp;
-    sp.vertexShader = LoadVertexShader("MyFirstVertexShader.glsl");
+    sp.vertexShader = LoadVertexShader("CameraFragmentShader.glsl"); 
     sp.geometryShader = LoadGeometryShader("MyFirstGeometryShader.glsl");
     sp.fragmentShader = LoadFragmentShader("MyFirstFragmentShader.glsl");
+
     program = CreateProgram(sp);
 }
 
@@ -232,8 +233,10 @@ void RenderManager::SetupPyramidBuffers()
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
-void RenderManager::DrawModel(const Model& model, const glm::mat4& transform)
+void RenderManager::DrawModel(const Model& model, const glm::mat4& transform, glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
 {
+    glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+    glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(transform));
     model.Render();
 }

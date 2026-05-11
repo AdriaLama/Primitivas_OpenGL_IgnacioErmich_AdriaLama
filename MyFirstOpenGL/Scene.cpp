@@ -15,6 +15,7 @@ void Scene::Setup()
     cube.scale = glm::vec3(0.3f, 0.3f, 0.3f);
     ortho.scale = glm::vec3(0.15f, 0.27f, 0.15f);
     pyramid.scale = glm::vec3(0.3f, 0.3f, 0.3f);
+    
 
     trollPositions[0] = glm::vec3(-0.6f, 0.0f, 1); // Izquierda
     trollPositions[1] = glm::vec3(0.0f, 0.0f, 0.0f); // Centro
@@ -38,6 +39,7 @@ void Scene::Update(float dt)
     tiempo = static_cast<float>(glfwGetTime());
 
     HandleInput();
+    camera.Update(dt);
 
     if (bPaused) return;
 
@@ -158,6 +160,6 @@ void Scene::Render()
     for (int i = 0; i < 3; i++)
     {
         glm::mat4 trollMatrix = GenerateTranslationMatrix(trollPositions[i]) * GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), trollRotations[i]) * GenerateScaleMatrix(glm::vec3(0.3f, 0.3f, 0.3f));
-        RM->DrawModel(models[0], trollMatrix);
+        RM->DrawModel(models[0], trollMatrix, camera.GetProjectionMatrix(), camera.GetViewMatrix());
     }
 }
