@@ -12,9 +12,10 @@ public:
 	void Update(double dt);
 	glm::mat4 GetViewMatrix();
 	glm::mat4 GetProjectionMatrix();
+	
 
 private:
-	glm::vec3 position = glm::vec3(0.f, 0.f, 3.f);
+	glm::vec3 position = glm::vec3(0.f, 0.7f, 3.f);
 	glm::vec3 localvectorUp = glm::vec3(0.f, 1.f, 0.f);
 	bool prevKeyC = false;
 	bool isPerspectiveActive = true;

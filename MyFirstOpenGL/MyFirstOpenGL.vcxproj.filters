@@ -65,6 +65,9 @@
     <None Include="MyFirstFragmentShader.glsl">
       <Filter>Shaders\Fragment Shader</Filter>
     </None>
+    <None Include="CameraFragmentShader.glsl">
+      <Filter>Shaders\Fragment Shader</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameObject.h">
