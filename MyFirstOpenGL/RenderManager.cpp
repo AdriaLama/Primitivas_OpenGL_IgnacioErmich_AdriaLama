@@ -266,3 +266,7 @@ GLuint RenderManager::LoadTexture(const std::string& filePath)
     stbi_image_free(textureInfo);
     return textureID; 
 }
+void RenderManager::SetColor(const glm::vec4& color)
+{
+    glUniform4f(glGetUniformLocation(program, "color"), color.r, color.g, color.b, color.a);
+}

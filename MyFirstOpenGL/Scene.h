@@ -22,6 +22,7 @@ private:
 
     glm::vec3 trollPositions[3];
     float trollRotations[3];
+    glm::vec4 trollColors[3];
 
     bool showCube = true;
     bool showOrtho = true;

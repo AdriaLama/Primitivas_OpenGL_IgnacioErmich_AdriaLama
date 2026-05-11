@@ -2,6 +2,7 @@
 
 uniform vec2 windowSize;
 uniform sampler2D textureSampler;
+uniform vec4 color;
 
 in vec2 uvsFragmentShader;
 
@@ -10,5 +11,5 @@ out vec4 fragColor;
 void main()
 {
     vec2 adjustedTexCoord = vec2(uvsFragmentShader.x, 1.0 - uvsFragmentShader.y);
-    fragColor = texture(textureSampler, adjustedTexCoord);
+    fragColor = texture(textureSampler, adjustedTexCoord) * color;
 }
