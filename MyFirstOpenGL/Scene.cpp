@@ -17,9 +17,9 @@ void Scene::Setup()
     pyramid.scale = glm::vec3(0.3f, 0.3f, 0.3f);
     
 
-    trollPositions[0] = glm::vec3(-0.6f, 0.0f, 1); // Izquierda
-    trollPositions[1] = glm::vec3(0.0f, 0.0f, 0.0f); // Centro
-    trollPositions[2] = glm::vec3(0.6f, 0.0f, 1); // Derecha
+    trollPositions[0] = glm::vec3(-0.8f, 0.0f, -0); // Izquierda
+    trollPositions[1] = glm::vec3(0.0f, 0.0f, -0.75f); // Centro
+    trollPositions[2] = glm::vec3(0.8f, 0.0f, -0); // Derecha
 
     trollRotations[0] = 90.f;
     trollRotations[1] = 0.f;

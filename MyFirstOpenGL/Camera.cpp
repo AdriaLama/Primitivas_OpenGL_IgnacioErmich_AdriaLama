@@ -5,15 +5,6 @@ void Camera::Update(double dt)
 {
 	GLFWwindow* window = RenderManager::GetInstance()->GetWindow();
 
-	//verificar inputs
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) position.y += dt;
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) position.y -= dt;
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) position.x -= dt;
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) position.x += dt;
-
-	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) position.z += dt;
-	if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS) position.z -= dt;
-
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 	{
 		fFov += dt * 50;
@@ -39,8 +30,11 @@ void Camera::Update(double dt)
 
 glm::mat4 Camera::GetViewMatrix()
 {
-	//Genero la matriu de vista
-	return glm::lookAt(position, position + glm::vec3(0.f, 0.f, -1.f), localvectorUp);
+	const float radius = 3.f;
+	float camX = sin(glfwGetTime()) * radius;
+	float camY = 1.25f;
+	float camZ = cos(glfwGetTime()) * radius;	
+	return glm::lookAt(glm::vec3(camX, camY, camZ), glm::vec3(0.0, 0.0, 0.f), localvectorUp);
 }
 
 glm::mat4 Camera::GetProjectionMatrix()
