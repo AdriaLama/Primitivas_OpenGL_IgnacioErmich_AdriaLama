@@ -13,6 +13,7 @@ public:
 
     // Binds VAO and draws
     void Render() const;
+    GLuint textureID = 0;
 
 private:
     GLuint VAO = 0;

@@ -15,6 +15,11 @@ private:
     GameObject cube;
     GameObject ortho;
     GameObject pyramid;
+    GLuint trollTexture;
+    GLuint rockTexture;
+
+    glm::vec3 trollPositions[3];
+    float trollRotations[3];
 
     bool showCube = true;
     bool showOrtho = true;
