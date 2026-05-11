@@ -40,6 +40,8 @@ public:
     GLFWwindow* GetWindow() const;
     GLuint GetProgram() const;
 
+    void SetColor(const glm::vec4& color);
+
 private:
     RenderManager() = default;
     static RenderManager* instance;

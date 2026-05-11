@@ -17,14 +17,17 @@ void Scene::Setup()
     pyramid.scale = glm::vec3(0.3f, 0.3f, 0.3f);
     
 
-    trollPositions[0] = glm::vec3(-0.8f, 0.0f, -0); // Izquierda
-    trollPositions[1] = glm::vec3(0.0f, 0.0f, -0.75f); // Centro
-    trollPositions[2] = glm::vec3(0.8f, 0.0f, -0); // Derecha
+    trollPositions[0] = glm::vec3(-0.8f, 0.0f, -0); 
+    trollPositions[1] = glm::vec3(0.0f, 0.0f, -0.75f); 
+    trollPositions[2] = glm::vec3(0.8f, 0.0f, -0); 
 
     trollRotations[0] = 90.f;
     trollRotations[1] = 0.f;
     trollRotations[2] = -90.f;
-   
+
+    trollColors[0] = glm::vec4(0.7, 0.7, 0.7, 1);
+    trollColors[1] = glm::vec4(0.2, 0.4, 1.0, 1);
+    trollColors[2] = glm::vec4(0.2, 1.0, 0.3, 1);
 
     models.push_back(LoadOBJModel("Assets/Models/troll.obj"));
 
@@ -161,5 +164,6 @@ void Scene::Render()
     {
         glm::mat4 trollMatrix = GenerateTranslationMatrix(trollPositions[i]) * GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), trollRotations[i]) * GenerateScaleMatrix(glm::vec3(0.3f, 0.3f, 0.3f));
         RM->DrawModel(models[0], trollMatrix, camera.GetProjectionMatrix(), camera.GetViewMatrix());
+        RM->SetColor(trollColors[i]);
     }
 }
