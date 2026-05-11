@@ -48,8 +48,6 @@ bool RenderManager::Init()
     SetupOrthoBuffers();
     SetupPyramidBuffers();
 
-    LoadTexture("Assets/Textures/troll.png");
-
     glUseProgram(program);
     glUniform2f(glGetUniformLocation(program, "windowSize"), WINDOW_WIDTH, WINDOW_HEIGHT);
     glUniform1i(glGetUniformLocation(program, "textureSampler"), 0);
@@ -240,19 +238,19 @@ void RenderManager::DrawModel(const Model& model, const glm::mat4& transform)
     model.Render();
 }
 
-bool RenderManager::LoadTexture(const std::string& filePath)
+GLuint RenderManager::LoadTexture(const std::string& filePath)
 {
     int width, height, nrChannels;
     unsigned char* textureInfo = stbi_load(filePath.c_str(), &width, &height, &nrChannels, 4);
     if (!textureInfo)
     {
         std::cerr << "No se ha podido cargar la textura: " << filePath << std::endl;
-        return false;
+        return 0;
     }
 
-    glActiveTexture(GL_TEXTURE0);
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -263,6 +261,5 @@ bool RenderManager::LoadTexture(const std::string& filePath)
     glGenerateMipmap(GL_TEXTURE_2D);
 
     stbi_image_free(textureInfo);
-    return true;
+    return textureID; 
 }
-

@@ -33,7 +33,7 @@ public:
     void DrawModel(const Model& model, const glm::mat4& transform);
 
     // Nuevo: carga una textura desde disco y la activa en GL_TEXTURE0
-    bool LoadTexture(const std::string& filePath);
+    GLuint LoadTexture(const std::string& filePath);
 
     void SetWireframe(bool enabled);
 

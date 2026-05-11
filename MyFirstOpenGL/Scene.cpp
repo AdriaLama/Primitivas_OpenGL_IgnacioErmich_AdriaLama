@@ -16,8 +16,21 @@ void Scene::Setup()
     ortho.scale = glm::vec3(0.15f, 0.27f, 0.15f);
     pyramid.scale = glm::vec3(0.3f, 0.3f, 0.3f);
 
+    trollPositions[0] = glm::vec3(-0.6f, 0.0f, 1); // Izquierda
+    trollPositions[1] = glm::vec3(0.0f, 0.0f, 0.0f); // Centro
+    trollPositions[2] = glm::vec3(0.6f, 0.0f, 1); // Derecha
+
+    trollRotations[0] = 90.f;
+    trollRotations[1] = 0.f;
+    trollRotations[2] = -90.f;
+   
+
     models.push_back(LoadOBJModel("Assets/Models/troll.obj"));
 
+    trollTexture = RenderManager::GetInstance()->LoadTexture("Assets/Textures/troll.png");
+    rockTexture = RenderManager::GetInstance()->LoadTexture("Assets/Textures/rock.png");
+
+    models[0].textureID = trollTexture;
 }
 
 void Scene::Update(float dt)
@@ -142,9 +155,9 @@ void Scene::Render()
     glm::mat4 pyramidModel = GenerateTranslationMatrix(pyramid.position) * GenerateRotationMatrix(glm::vec3(1.f, 0.f, 0.f), pyramid.rotation.x) * GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), pyramid.rotation.y)* GenerateScaleMatrix(pyramid.scale);
     RM->DrawPyramid(pyramidModel, showPyramid, tiempo);
 
-    for (int i = 0; i < models.size(); i++)
+    for (int i = 0; i < 3; i++)
     {
-        glm::mat4 modelMatrix = GenerateTranslationMatrix(glm::vec3(0.f, 0.f, 0.f)) * GenerateScaleMatrix(glm::vec3(0.3f, 0.3f, 0.3f));
-        RM->DrawModel(models[i], modelMatrix);
+        glm::mat4 trollMatrix = GenerateTranslationMatrix(trollPositions[i]) * GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), trollRotations[i]) * GenerateScaleMatrix(glm::vec3(0.3f, 0.3f, 0.3f));
+        RM->DrawModel(models[0], trollMatrix);
     }
 }

@@ -34,6 +34,7 @@ Model::Model(const std::vector<float>& vertexs,
 
 void Model::Render() const
 {
+    glBindTexture(GL_TEXTURE_2D, textureID);
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, numVertexs);
     glBindVertexArray(0);
