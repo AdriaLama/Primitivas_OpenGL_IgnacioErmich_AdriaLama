@@ -13,25 +13,26 @@ public:
 private:
 
     std::vector<Model> models;
-    GameObject cube;
+   /* GameObject cube;
     GameObject ortho;
-    GameObject pyramid;
+    GameObject pyramid;*/
     GLuint trollTexture;
     GLuint rockTexture;
     Camera camera;
+    GameObject floor;
 
     glm::vec3 trollPositions[3];
     float trollRotations[3];
     glm::vec4 trollColors[3];
 
-    bool showCube = true;
+   /* bool showCube = true;
     bool showOrtho = true;
     bool showPyramid = true;
     bool bPaused = false;
-    bool wireframe = false;
+    bool wireframe = false;*/
 
     // Estado anterior de teclas 
-    bool b1WasPressed = false;
+   /* bool b1WasPressed = false;
     bool b2WasPressed = false;
     bool b3WasPressed = false;
     bool b4WasPressed = false;
@@ -44,6 +45,6 @@ private:
     void HandleInput();
     void UpdateCube();
     void UpdateOrtho();
-    void UpdatePyramid();
+    void UpdatePyramid();*/
     void Render();
 };

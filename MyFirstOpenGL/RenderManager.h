@@ -24,10 +24,10 @@ public:
     void ClearBuffers();
     void SwapBuffers();
 
-    // Primitivas del ejercicio anterior
-    void DrawCube(const glm::mat4& transform, bool visible);
+   /* void DrawCube(const glm::mat4& transform, bool visible);
     void DrawOrtho(const glm::mat4& transform, bool visible);
-    void DrawPyramid(const glm::mat4& transform, bool visible, float tiempo);
+    void DrawPyramid(const glm::mat4& transform, bool visible, float tiempo);*/
+    void DrawFloor(const glm::mat4& transform);
 
     // Nuevo: dibuja un modelo OBJ con textura aplicada
     void DrawModel(const Model& model, const glm::mat4& transform, glm::mat4 projectionMatrix, glm::mat4 viewMatrix);
@@ -53,12 +53,16 @@ private:
     GLuint texture = 0;   
 
     // Primitivas
-    GLuint vaoCube = 0, vboCube = 0;
+   /* GLuint vaoCube = 0, vboCube = 0;
     GLuint vaoOrtho = 0, vboOrtho = 0;
-    GLuint vaoPyramid = 0, vboPyramid = 0;
+    GLuint vaoPyramid = 0, vboPyramid = 0;*/
+
+    GLuint vaoFloor = 0, vboFloor = 0;
 
     void SetupShaders();
-    void SetupCubeBuffers();
+  /*  void SetupCubeBuffers();
     void SetupOrthoBuffers();
-    void SetupPyramidBuffers();
+    void SetupPyramidBuffers();*/
+
+    void SetupFloorBuffers();
 };

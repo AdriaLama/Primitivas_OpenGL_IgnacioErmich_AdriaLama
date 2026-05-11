@@ -39,14 +39,16 @@ bool RenderManager::Init()
 
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    glClearColor(0.f, 0.f, 0.f, 1.f);
+    glClearColor(0.4f, 0.9f, 1.f, 1.f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glEnable(GL_DEPTH_TEST);
 
     SetupShaders();
-    SetupCubeBuffers();
+   /* SetupCubeBuffers();
     SetupOrthoBuffers();
-    SetupPyramidBuffers();
+    SetupPyramidBuffers();*/
+
+    SetupFloorBuffers();
 
     glUseProgram(program);
     glUniform2f(glGetUniformLocation(program, "windowSize"), WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -88,35 +90,45 @@ void RenderManager::SetWireframe(bool enabled)
     glPolygonMode(GL_FRONT_AND_BACK, enabled ? GL_LINE : GL_FILL);
 }
 
-void RenderManager::DrawCube(const glm::mat4& transform, bool visible)
-{
-    glm::mat4 model = glm::mat4(visible ? 1.0f : 0.f) * transform;
-    glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniform1i(glGetUniformLocation(program, "objectID"), 0);
-    glBindVertexArray(vaoCube);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 14);
-    glBindVertexArray(0);
-}
+//void RenderManager::DrawCube(const glm::mat4& transform, bool visible)
+//{
+//    glm::mat4 model = glm::mat4(visible ? 1.0f : 0.f) * transform;
+//    glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(model));
+//    glUniform1i(glGetUniformLocation(program, "objectID"), 0);
+//    glBindVertexArray(vaoCube);
+//    glDrawArrays(GL_TRIANGLE_STRIP, 0, 14);
+//    glBindVertexArray(0);
+//}
+//
+//void RenderManager::DrawOrtho(const glm::mat4& transform, bool visible)
+//{
+//    glm::mat4 model = glm::mat4(visible ? 1.0f : 0.f) * transform;
+//    glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(model));
+//    glUniform1i(glGetUniformLocation(program, "objectID"), 1);
+//    glBindVertexArray(vaoOrtho);
+//    glDrawArrays(GL_TRIANGLE_STRIP, 0, 14);
+//    glBindVertexArray(0);
+//}
+//
+//void RenderManager::DrawPyramid(const glm::mat4& transform, bool visible, float tiempo)
+//{
+//    glm::mat4 model = glm::mat4(visible ? 1.0f : 0.f) * transform;
+//    glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(model));
+//    glUniform1i(glGetUniformLocation(program, "objectID"), 2);
+//    glUniform1f(glGetUniformLocation(program, "tiempo"), tiempo);
+//    glBindVertexArray(vaoPyramid);
+//    glDrawArrays(GL_TRIANGLES, 0, 18);
+//    glBindVertexArray(0);
+//}
 
-void RenderManager::DrawOrtho(const glm::mat4& transform, bool visible)
+void RenderManager::DrawFloor(const glm::mat4& transform)
 {
-    glm::mat4 model = glm::mat4(visible ? 1.0f : 0.f) * transform;
-    glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniform1i(glGetUniformLocation(program, "objectID"), 1);
-    glBindVertexArray(vaoOrtho);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 14);
-    glBindVertexArray(0);
-}
-
-void RenderManager::DrawPyramid(const glm::mat4& transform, bool visible, float tiempo)
-{
-    glm::mat4 model = glm::mat4(visible ? 1.0f : 0.f) * transform;
-    glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniform1i(glGetUniformLocation(program, "objectID"), 2);
-    glUniform1f(glGetUniformLocation(program, "tiempo"), tiempo);
-    glBindVertexArray(vaoPyramid);
-    glDrawArrays(GL_TRIANGLES, 0, 18);
-    glBindVertexArray(0);
+   glm::mat4 model = glm::mat4(1.0f) * transform;
+   glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(model));
+   glUniform1i(glGetUniformLocation(program, "objectID"), 0);
+   glBindVertexArray(vaoFloor);
+   glDrawArrays(GL_TRIANGLE_STRIP, 0, 14);
+   glBindVertexArray(0);
 }
 
 GLFWwindow* RenderManager::GetWindow() const { return window; }
@@ -133,30 +145,30 @@ void RenderManager::SetupShaders()
     program = CreateProgram(sp);
 }
 
-void RenderManager::SetupCubeBuffers()
+void RenderManager::SetupFloorBuffers()
 {
     GLfloat cubeVertices[] =
-    {
-        -0.5f, +0.5f, -0.5f,
-        +0.5f, +0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        +0.5f, -0.5f, -0.5f,
-        +0.5f, -0.5f, +0.5f,
-        +0.5f, +0.5f, -0.5f,
+   {
+       -0.5f, +0.5f, -0.5f,
+       +0.5f, +0.5f, -0.5f,
+       -0.5f, -0.5f, -0.5f,
+       +0.5f, -0.5f, -0.5f,
+       +0.5f, -0.5f, +0.5f,
+       +0.5f, +0.5f, -0.5f,
+       +0.5f, +0.5f, +0.5f,
+       -0.5f, +0.5f, -0.5f,
+       -0.5f, +0.5f, +0.5f,
+       -0.5f, -0.5f, -0.5f,
+       -0.5f, -0.5f, +0.5f,
+       +0.5f, -0.5f, +0.5f,
+       -0.5f, +0.5f, +0.5f,
         +0.5f, +0.5f, +0.5f,
-        -0.5f, +0.5f, -0.5f,
-        -0.5f, +0.5f, +0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, +0.5f,
-        +0.5f, -0.5f, +0.5f,
-        -0.5f, +0.5f, +0.5f,
-        +0.5f, +0.5f, +0.5f,
-    };
+   };
 
-    glGenVertexArrays(1, &vaoCube);
-    glBindVertexArray(vaoCube);
-    glGenBuffers(1, &vboCube);
-    glBindBuffer(GL_ARRAY_BUFFER, vboCube);
+    glGenVertexArrays(1, &vaoFloor);
+    glBindVertexArray(vaoFloor);
+    glGenBuffers(1, &vboFloor);
+    glBindBuffer(GL_ARRAY_BUFFER, vboFloor);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
@@ -164,75 +176,106 @@ void RenderManager::SetupCubeBuffers()
     glBindVertexArray(0);
 }
 
-void RenderManager::SetupOrthoBuffers()
-{
-    GLfloat orthoVertices[] =
-    {
-        -0.5f, +0.5f, -0.5f,
-        +0.5f, +0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        +0.5f, -0.5f, -0.5f,
-        +0.5f, -0.5f, +0.5f,
-        +0.5f, +0.5f, -0.5f,
-        +0.5f, +0.5f, +0.5f,
-        -0.5f, +0.5f, -0.5f,
-        -0.5f, +0.5f, +0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, +0.5f,
-        +0.5f, -0.5f, +0.5f,
-        -0.5f, +0.5f, +0.5f,
-        +0.5f, +0.5f, +0.5f,
-    };
-
-    glGenVertexArrays(1, &vaoOrtho);
-    glBindVertexArray(vaoOrtho);
-    glGenBuffers(1, &vboOrtho);
-    glBindBuffer(GL_ARRAY_BUFFER, vboOrtho);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(orthoVertices), orthoVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-}
-
-void RenderManager::SetupPyramidBuffers()
-{
-    GLfloat pyramidVertices[] =
-    {
-         0.0f, +0.5f,  0.0f,
-        -0.5f, -0.5f, +0.5f,
-        +0.5f, -0.5f, +0.5f,
-
-         0.0f, +0.5f,  0.0f,
-        +0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-
-         0.0f, +0.5f,  0.0f,
-        +0.5f, -0.5f, +0.5f,
-        +0.5f, -0.5f, -0.5f,
-
-         0.0f, +0.5f,  0.0f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, +0.5f,
-
-        -0.5f, -0.5f, -0.5f,
-        +0.5f, -0.5f, -0.5f,
-        +0.5f, -0.5f, +0.5f,
-        -0.5f, -0.5f, -0.5f,
-        +0.5f, -0.5f, +0.5f,
-        -0.5f, -0.5f, +0.5f,
-    };
-
-    glGenVertexArrays(1, &vaoPyramid);
-    glBindVertexArray(vaoPyramid);
-    glGenBuffers(1, &vboPyramid);
-    glBindBuffer(GL_ARRAY_BUFFER, vboPyramid);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(pyramidVertices), pyramidVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-}
+//void RenderManager::SetupCubeBuffers()
+//{
+//    GLfloat cubeVertices[] =
+//    {
+//        -0.5f, +0.5f, -0.5f,
+//        +0.5f, +0.5f, -0.5f,
+//        -0.5f, -0.5f, -0.5f,
+//        +0.5f, -0.5f, -0.5f,
+//        +0.5f, -0.5f, +0.5f,
+//        +0.5f, +0.5f, -0.5f,
+//        +0.5f, +0.5f, +0.5f,
+//        -0.5f, +0.5f, -0.5f,
+//        -0.5f, +0.5f, +0.5f,
+//        -0.5f, -0.5f, -0.5f,
+//        -0.5f, -0.5f, +0.5f,
+//        +0.5f, -0.5f, +0.5f,
+//        -0.5f, +0.5f, +0.5f,
+//        +0.5f, +0.5f, +0.5f,
+//    };
+//
+//    glGenVertexArrays(1, &vaoCube);
+//    glBindVertexArray(vaoCube);
+//    glGenBuffers(1, &vboCube);
+//    glBindBuffer(GL_ARRAY_BUFFER, vboCube);
+//    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+//    glEnableVertexAttribArray(0);
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
+//    glBindVertexArray(0);
+//}
+//
+//void RenderManager::SetupOrthoBuffers()
+//{
+//    GLfloat orthoVertices[] =
+//    {
+//        -0.5f, +0.5f, -0.5f,
+//        +0.5f, +0.5f, -0.5f,
+//        -0.5f, -0.5f, -0.5f,
+//        +0.5f, -0.5f, -0.5f,
+//        +0.5f, -0.5f, +0.5f,
+//        +0.5f, +0.5f, -0.5f,
+//        +0.5f, +0.5f, +0.5f,
+//        -0.5f, +0.5f, -0.5f,
+//        -0.5f, +0.5f, +0.5f,
+//        -0.5f, -0.5f, -0.5f,
+//        -0.5f, -0.5f, +0.5f,
+//        +0.5f, -0.5f, +0.5f,
+//        -0.5f, +0.5f, +0.5f,
+//        +0.5f, +0.5f, +0.5f,
+//    };
+//
+//    glGenVertexArrays(1, &vaoOrtho);
+//    glBindVertexArray(vaoOrtho);
+//    glGenBuffers(1, &vboOrtho);
+//    glBindBuffer(GL_ARRAY_BUFFER, vboOrtho);
+//    glBufferData(GL_ARRAY_BUFFER, sizeof(orthoVertices), orthoVertices, GL_STATIC_DRAW);
+//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+//    glEnableVertexAttribArray(0);
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
+//    glBindVertexArray(0);
+//}
+//
+//void RenderManager::SetupPyramidBuffers()
+//{
+//    GLfloat pyramidVertices[] =
+//    {
+//         0.0f, +0.5f,  0.0f,
+//        -0.5f, -0.5f, +0.5f,
+//        +0.5f, -0.5f, +0.5f,
+//
+//         0.0f, +0.5f,  0.0f,
+//        +0.5f, -0.5f, -0.5f,
+//        -0.5f, -0.5f, -0.5f,
+//
+//         0.0f, +0.5f,  0.0f,
+//        +0.5f, -0.5f, +0.5f,
+//        +0.5f, -0.5f, -0.5f,
+//
+//         0.0f, +0.5f,  0.0f,
+//        -0.5f, -0.5f, -0.5f,
+//        -0.5f, -0.5f, +0.5f,
+//
+//        -0.5f, -0.5f, -0.5f,
+//        +0.5f, -0.5f, -0.5f,
+//        +0.5f, -0.5f, +0.5f,
+//        -0.5f, -0.5f, -0.5f,
+//        +0.5f, -0.5f, +0.5f,
+//        -0.5f, -0.5f, +0.5f,
+//    };
+//
+//    glGenVertexArrays(1, &vaoPyramid);
+//    glBindVertexArray(vaoPyramid);
+//    glGenBuffers(1, &vboPyramid);
+//    glBindBuffer(GL_ARRAY_BUFFER, vboPyramid);
+//    glBufferData(GL_ARRAY_BUFFER, sizeof(pyramidVertices), pyramidVertices, GL_STATIC_DRAW);
+//    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
+//    glEnableVertexAttribArray(0);
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
+//    glBindVertexArray(0);
+//}
 void RenderManager::DrawModel(const Model& model, const glm::mat4& transform, glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
 {
     glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
