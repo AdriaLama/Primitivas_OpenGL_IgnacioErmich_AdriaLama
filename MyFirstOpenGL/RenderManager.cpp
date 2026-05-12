@@ -125,7 +125,7 @@ void RenderManager::DrawFloor(const glm::mat4& transform)
 {
    glm::mat4 model = glm::mat4(1.0f) * transform;
    glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(model));
-   glUniform1i(glGetUniformLocation(program, "objectID"), 0);
+   glUniform1i(glGetUniformLocation(program, "hasTexture"), 0);
    glBindVertexArray(vaoFloor);
    glDrawArrays(GL_TRIANGLE_STRIP, 0, 14);
    glBindVertexArray(0);
@@ -281,6 +281,7 @@ void RenderManager::DrawModel(const Model& model, const glm::mat4& transform, gl
     glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
     glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(transform));
+    glUniform1i(glGetUniformLocation(program, "hasTexture"), 1);
     model.Render();
 }
 

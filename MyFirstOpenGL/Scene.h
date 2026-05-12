@@ -4,6 +4,15 @@
 #include <vector>
 #include "Camera.h"
 
+struct RenderObject         
+{
+    Model* model;
+    glm::vec3 position;
+    glm::vec3 rotation;
+    glm::vec3 scale;
+    glm::vec4 color;
+};
+
 class Scene
 {
 public:
@@ -16,14 +25,10 @@ private:
    /* GameObject cube;
     GameObject ortho;
     GameObject pyramid;*/
-    GLuint trollTexture;
-    GLuint rockTexture;
+    std::vector<RenderObject> trolls;
+    std::vector<RenderObject> rocks;
     Camera camera;
     GameObject floor;
-
-    glm::vec3 trollPositions[3];
-    float trollRotations[3];
-    glm::vec4 trollColors[3];
 
    /* bool showCube = true;
     bool showOrtho = true;
