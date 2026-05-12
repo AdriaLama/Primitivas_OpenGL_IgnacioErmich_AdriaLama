@@ -5,10 +5,10 @@ layout(location = 1) in vec2 uvsVertexShader;
 
 uniform mat4 transform;
 
-out vec2 uvsGeometryShader;
+out vec2 uvsFragmentShader;
 
 void main()
 {
-    uvsGeometryShader = uvsVertexShader;
+    uvsFragmentShader = uvsVertexShader;
     gl_Position = transform * vec4(posicion, 1.0);
 }

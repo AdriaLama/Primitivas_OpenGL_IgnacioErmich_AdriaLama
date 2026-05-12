@@ -8,7 +8,7 @@ public:
     void InitDt();
     void UpdateDt();
     float GetDt() const;
-
+    float GetCurrentTime() const;
 private:
     TimeManager() = default;
 
