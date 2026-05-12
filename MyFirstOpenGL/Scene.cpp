@@ -54,6 +54,7 @@ void Scene::Update(float dt)
     UpdateOrtho();
     UpdatePyramid();*/
     Render();
+    camera.Update(dt);
 }
 
 // Gestion de los inputs
