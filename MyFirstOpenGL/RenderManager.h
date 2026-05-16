@@ -3,8 +3,10 @@
 #include <GLFW/glfw3.h>
 #include <glm.hpp>
 #include <vector>
+#include <string>
 
 #include "Shader.h"
+#include "Model.h"
 
 #define WINDOW_WIDTH  640
 #define WINDOW_HEIGHT 480
@@ -22,14 +24,18 @@ public:
     void ClearBuffers();
     void SwapBuffers();
 
-    void DrawCube(const glm::mat4& transform, bool visible);
-    void DrawOrtho(const glm::mat4& transform, bool visible);
-    void DrawPyramid(const glm::mat4& transform, bool visible, float tiempo);
+    void DrawFloor(const glm::mat4& transform);
+
+    void DrawModel(const Model& model, const glm::mat4& transform, glm::mat4 projectionMatrix, glm::mat4 viewMatrix);
+
+    GLuint LoadTexture(const std::string& filePath);
 
     void SetWireframe(bool enabled);
 
     GLFWwindow* GetWindow() const;
     GLuint GetProgram() const;
+
+    void SetColor(const glm::vec4& color);
 
 private:
     RenderManager() = default;
@@ -39,13 +45,9 @@ private:
 
     GLFWwindow* window = nullptr;
     GLuint program = 0;
+    GLuint texture = 0;   
+    GLuint vaoFloor = 0, vboFloor = 0;
 
-    GLuint vaoCube = 0, vboCube = 0;
-    GLuint vaoOrtho = 0, vboOrtho = 0;
-    GLuint vaoPyramid = 0, vboPyramid = 0;
-
-    void SetupCubeBuffers();
-    void SetupOrthoBuffers();
-    void SetupPyramidBuffers();
     void SetupShaders();
+    void SetupFloorBuffers();
 };

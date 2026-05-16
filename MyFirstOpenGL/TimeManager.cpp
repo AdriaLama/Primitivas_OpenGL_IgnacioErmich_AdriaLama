@@ -28,3 +28,8 @@ float TimeManager::GetDt() const
 {
     return fDeltaTime;
 }
+
+float TimeManager::GetCurrentTime() const
+{
+    return fCurrentTime;
+}

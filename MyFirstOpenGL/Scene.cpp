@@ -1,141 +1,89 @@
 #include "Scene.h"
 #include "RenderManager.h"
 #include "Transform.h"
-#include <GLFW/glfw3.h>
+
+// Inicializa todos los objetos de la escena
 
 void Scene::Setup()
 {
-    cube.position = glm::vec3(-0.55f, 0.f, 0.f);
-    ortho.position = glm::vec3(0.0f, 0.f, 0.f);
-    pyramid.position = glm::vec3(0.55f, 0.f, 0.f);
+    // Suelo
+    floor.position = glm::vec3(0.f, -0.5f, 0.f);
+    floor.scale = glm::vec3(3.5f, 1.f, 3.5f);
 
-    cube.forward = glm::vec3(0.f, 1.f, 0.f);
-    pyramid.forward = glm::vec3(0.f, 1.f, 0.f);
+    // Carga los modelos OBJ una sola vez y reutiliza en múltiples instancias
+    models.push_back(LoadOBJModel("Assets/Models/troll.obj"));
+    models.push_back(LoadOBJModel("Assets/Models/rock.obj"));
 
-    cube.scale = glm::vec3(0.3f, 0.3f, 0.3f);
-    ortho.scale = glm::vec3(0.15f, 0.27f, 0.15f);
-    pyramid.scale = glm::vec3(0.3f, 0.3f, 0.3f);
+    // Cargar las texturas correspondientes a cada modelo
+    models[0].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/troll.png");
+    models[1].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/rock.png");
+
+    //Trolls
+    // Tres instancias del mismo modelo, distribuidas horizontalmente.
+    // Cada una con rotación y color de tinte distintos.
+    trolls.push_back({ &models[0], glm::vec3(-0.8f, 0.f, 0.f),  glm::vec3(0.f, 90.f, 0.f),   glm::vec3(0.3f), glm::vec4(0.2f, 1.0f, 0.3f, 1.f) });
+    trolls.push_back({ &models[0], glm::vec3(0.f, 0.f, -0.75f), glm::vec3(0.f, 0.f, 0.f),    glm::vec3(0.3f), glm::vec4(0.2f, 0.5f, 0.5f, 1.f) }); 
+    trolls.push_back({ &models[0], glm::vec3(0.8f, 0.f, 0.f),   glm::vec3(0.f, -90.f, 0.f),  glm::vec3(0.3f), glm::vec4(0.2f, 1.f, 1.0f, 1.f) }); 
+
+    //Rocas en el suelo
+    // Cuatro rocas distribuidas alrededor del centro de la escena.
+    // Color blanco (sin tinte) para respetar la textura original.
+    rocks.push_back({ &models[1], glm::vec3(0.2f,  0.f,  0.4f),  glm::vec3(0.f,  45.f, 0.f),  glm::vec3(0.4f, 0.2f, 0.2f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
+    rocks.push_back({ &models[1], glm::vec3(-0.2f, 0.f,  0.4f),  glm::vec3(0.f, -45.f, 0.f),  glm::vec3(0.4f, 0.2f, 0.2f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
+    rocks.push_back({ &models[1], glm::vec3(-0.25f, 0.f, -0.1f), glm::vec3(0.f,  45.f, 0.f),  glm::vec3(0.4f, 0.2f, 0.2f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
+    rocks.push_back({ &models[1], glm::vec3(0.25f, 0.f, -0.1f),  glm::vec3(0.f, -45.f, 0.f),  glm::vec3(0.4f, 0.2f, 0.2f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
+
+    // Nubes (reutilizando modelo de roca) 
+    rocks.push_back({ &models[1], glm::vec3(0.25f,  1.f,   -1.f), glm::vec3(-10.f,  0.f, 10.f), glm::vec3(0.6f, 0.2f, 0.2f), glm::vec4(0.7f, 0.7f, 1.f, 1.f) });
+    rocks.push_back({ &models[1], glm::vec3(1.f,    1.25f,  1.f), glm::vec3(15.f,  0.f, 15.f), glm::vec3(0.8f, 0.3f, 0.3f), glm::vec4(0.7f, 0.7f, 1.f, 1.f) });
+    rocks.push_back({ &models[1], glm::vec3(-1.75f, 1.25f,  0.8f),glm::vec3(12.f, 10.f, 15.f), glm::vec3(0.7f, 0.4f, 0.2f), glm::vec4(0.7f, 0.7f, 1.f, 1.f) });
 }
 
 void Scene::Update(float dt)
 {
-    tiempo = static_cast<float>(glfwGetTime());
-
-    HandleInput();
-
-    if (bPaused) return;
-
-    UpdateCube();
-    UpdateOrtho();
-    UpdatePyramid();
     Render();
-}
-
-// Gestion de los inputs
-
-void Scene::HandleInput()
-{
-    GLFWwindow* window = RenderManager::GetInstance()->GetWindow();
-
-    // Tecla 1 - wireframe
-    bool b1IsPressed = glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS;
-    if (b1IsPressed && !b1WasPressed)
-    {
-        wireframe = !wireframe;
-        RenderManager::GetInstance()->SetWireframe(wireframe);
-    }
-    b1WasPressed = b1IsPressed;
-
-    // Espacio - pausa
-    bool bSpaceIsPressed = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
-    if (bSpaceIsPressed && !bSpaceWasPressed)
-        bPaused = !bPaused;
-    bSpaceWasPressed = bSpaceIsPressed;
-
-    // M - acelerar
-    bool bMIsPressed = glfwGetKey(window, GLFW_KEY_M) == GLFW_PRESS;
-    if (bMIsPressed && !bMWasPressed)
-    {
-        cube.fVelocity += cube.fVelocity * 0.10f;
-        cube.fAngularVel += cube.fAngularVel * 0.10f;
-        ortho.fScaleVel += ortho.fScaleVel * 0.10f;
-        ortho.fAngularVel += ortho.fAngularVel * 0.10f;
-        pyramid.fVelocity += pyramid.fVelocity * 0.10f;
-        pyramid.fAngularVel += pyramid.fAngularVel * 0.10f;
-    }
-    bMWasPressed = bMIsPressed;
-
-    // N - desacelerar
-    bool bNIsPressed = glfwGetKey(window, GLFW_KEY_N) == GLFW_PRESS;
-    if (bNIsPressed && !bNWasPressed)
-    {
-        cube.fVelocity -= cube.fVelocity * 0.10f;
-        cube.fAngularVel -= cube.fAngularVel * 0.10f;
-        ortho.fScaleVel -= ortho.fScaleVel * 0.10f;
-        ortho.fAngularVel -= ortho.fAngularVel * 0.10f;
-        pyramid.fVelocity -= pyramid.fVelocity * 0.10f;
-        pyramid.fAngularVel -= pyramid.fAngularVel * 0.10f;
-    }
-    bNWasPressed = bNIsPressed;
-
-    // Tecla 2 - toggle cubo
-    bool b2IsPressed = glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS;
-    if (b2IsPressed && !b2WasPressed) showCube = !showCube;
-    b2WasPressed = b2IsPressed;
-
-    // Tecla 3 - toggle ortoedro
-    bool b3IsPressed = glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS;
-    if (b3IsPressed && !b3WasPressed) showOrtho = !showOrtho;
-    b3WasPressed = b3IsPressed;
-
-    // Tecla 4 - toggle piramide
-    bool b4IsPressed = glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS;
-    if (b4IsPressed && !b4WasPressed) showPyramid = !showPyramid;
-    b4WasPressed = b4IsPressed;
+    camera.Update(dt);
 }
 
 
-//Update posiciones y comportamiento cubo
-void Scene::UpdateCube()
-{
-    cube.position = cube.position + cube.forward * cube.fVelocity;
-    cube.rotation = cube.rotation + glm::vec3(0.f, 1.f, 0.f) * cube.fAngularVel;
-
-    if (cube.position.y >= 0.7f || cube.position.y <= -0.7f)
-        cube.forward = cube.forward * -1.f;
-}
-//Update posiciones y comportamiento ortoedro
-void Scene::UpdateOrtho()
-{
-    ortho.rotation = ortho.rotation + glm::vec3(0.f, 0.f, 1.f) * ortho.fAngularVel;
-    ortho.scale = ortho.scale + glm::vec3(1.f, 0.f, 0.f) * ortho.fScaleVel;
-
-    if (ortho.scale.x >= 0.3f || ortho.scale.x <= 0.05f)
-        ortho.fScaleVel = ortho.fScaleVel * -1.f;
-}
-//Update posiciones y comportamiento piramide
-void Scene::UpdatePyramid()
-{
-    pyramid.position = pyramid.position + pyramid.forward * pyramid.fVelocity;
-    pyramid.rotation = pyramid.rotation + glm::vec3(1.f, 1.f, 0.f) * pyramid.fAngularVel;
-
-    if (pyramid.position.y >= 0.7f || pyramid.position.y <= -0.7f)
-        pyramid.forward = pyramid.forward * -1.f;
-}
+// Recorre todos los objetos de la escena y los envía a renderizar.
+// Para cada objeto construye su matriz de modelo : Translation * RotationX * RotationY * RotationZ * Scale
+// Se obtienen las matrices de proyección y vista de la cámara y se pasan al RenderManager junto con la geometría del modelo.
 
 void Scene::Render()
 {
     RenderManager* RM = RenderManager::GetInstance();
 
-    // Cubo
-    glm::mat4 cubeModel = GenerateTranslationMatrix(cube.position) * GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), cube.rotation.y) * GenerateScaleMatrix(cube.scale);
-    RM->DrawCube(cubeModel, showCube);
+    // Obtener matrices de cámara actualizadas para este frame
+    glm::mat4 projection = camera.GetProjectionMatrix();
+    glm::mat4 view = camera.GetViewMatrix();
 
-    // Ortoedro
-    glm::mat4 orthoModel = GenerateTranslationMatrix(ortho.position) * GenerateRotationMatrix(glm::vec3(0.f, 0.f, 1.f), ortho.rotation.z) * GenerateScaleMatrix(ortho.scale);
-    RM->DrawOrtho(orthoModel, showOrtho);
+    // Suelo
+    RM->SetColor(glm::vec4(0.92f, 0.75f, 0.45f, 1.f)); 
+    glm::mat4 floorModel = GenerateTranslationMatrix(floor.position) * GenerateScaleMatrix(floor.scale);
+    RM->DrawFloor(floorModel);
 
-    // Piramide
-    glm::mat4 pyramidModel = GenerateTranslationMatrix(pyramid.position) * GenerateRotationMatrix(glm::vec3(1.f, 0.f, 0.f), pyramid.rotation.x) * GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), pyramid.rotation.y)* GenerateScaleMatrix(pyramid.scale);
-    RM->DrawPyramid(pyramidModel, showPyramid, tiempo);
+    //Trolls
+    for (RenderObject& obj : trolls)
+    {
+        RM->SetColor(obj.color);
+        glm::mat4 matrix = GenerateTranslationMatrix(obj.position)
+            * GenerateRotationMatrix(glm::vec3(1.f, 0.f, 0.f), obj.rotation.x)
+            * GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), obj.rotation.y)
+            * GenerateRotationMatrix(glm::vec3(0.f, 0.f, 1.f), obj.rotation.z)
+            * GenerateScaleMatrix(obj.scale);
+        RM->DrawModel(*obj.model, matrix, projection, view);
+    }
+
+    //Rocas y nubes
+    for (RenderObject& obj : rocks)
+    {
+        RM->SetColor(obj.color);
+        glm::mat4 matrix = GenerateTranslationMatrix(obj.position)
+            * GenerateRotationMatrix(glm::vec3(1.f, 0.f, 0.f), obj.rotation.x)
+            * GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), obj.rotation.y)
+            * GenerateRotationMatrix(glm::vec3(0.f, 0.f, 1.f), obj.rotation.z)
+            * GenerateScaleMatrix(obj.scale);
+        RM->DrawModel(*obj.model, matrix, projection, view);
+    }
 }

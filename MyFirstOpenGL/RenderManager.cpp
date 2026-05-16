@@ -1,6 +1,7 @@
 #include "RenderManager.h"
 #include <gtc/type_ptr.hpp>
 #include <iostream>
+#include <stb_image.h>
 
 RenderManager* RenderManager::instance = nullptr;
 
@@ -17,6 +18,8 @@ void RenderManager::FramebufferSizeCallback(GLFWwindow* window, int width, int h
     glUniform2f(glGetUniformLocation(GetInstance()->program, "windowSize"), width, height);
 }
 
+
+// Inicializa todo el sistema de renderizado
 bool RenderManager::Init()
 {
     srand(static_cast<unsigned int>(time(NULL)));
@@ -30,24 +33,31 @@ bool RenderManager::Init()
     window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Primitivas 3D", NULL, NULL);
     if (!window) return false;
 
+
     glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
     glfwMakeContextCurrent(window);
 
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) return false;
 
+
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    glClearColor(0.f, 0.f, 0.f, 1.f);
+
+    glClearColor(0.4f, 0.9f, 1.f, 1.f);
+
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+    // Depth test necesario para corregir el z-fighting
+    glEnable(GL_DEPTH_TEST);
+
     SetupShaders();
-    SetupCubeBuffers();
-    SetupOrthoBuffers();
-    SetupPyramidBuffers();
+
+    SetupFloorBuffers();
 
     glUseProgram(program);
     glUniform2f(glGetUniformLocation(program, "windowSize"), WINDOW_WIDTH, WINDOW_HEIGHT);
+    glUniform1i(glGetUniformLocation(program, "textureSampler"), 0);
 
     return true;
 }
@@ -85,51 +95,30 @@ void RenderManager::SetWireframe(bool enabled)
     glPolygonMode(GL_FRONT_AND_BACK, enabled ? GL_LINE : GL_FILL);
 }
 
-void RenderManager::DrawCube(const glm::mat4& transform, bool visible)
+void RenderManager::DrawFloor(const glm::mat4& transform)
 {
-    glm::mat4 model = glm::mat4(visible ? 1.0f : 0.f) * transform;
+    const glm::mat4& model = transform;
     glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniform1i(glGetUniformLocation(program, "objectID"), 0);
-    glBindVertexArray(vaoCube);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 14);
-    glBindVertexArray(0);
-}
 
-void RenderManager::DrawOrtho(const glm::mat4& transform, bool visible)
-{
-    glm::mat4 model = glm::mat4(visible ? 1.0f : 0.f) * transform;
-    glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniform1i(glGetUniformLocation(program, "objectID"), 1);
-    glBindVertexArray(vaoOrtho);
+    glUniform1i(glGetUniformLocation(program, "hasTexture"), 0); // Se deshabilita la textura para usar color plano.
+    glBindVertexArray(vaoFloor);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 14);
-    glBindVertexArray(0);
-}
-
-void RenderManager::DrawPyramid(const glm::mat4& transform, bool visible, float tiempo)
-{
-    glm::mat4 model = glm::mat4(visible ? 1.0f : 0.f) * transform;
-    glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(model));
-    glUniform1i(glGetUniformLocation(program, "objectID"), 2);
-    glUniform1f(glGetUniformLocation(program, "tiempo"), tiempo);
-    glBindVertexArray(vaoPyramid);
-    glDrawArrays(GL_TRIANGLES, 0, 18);
     glBindVertexArray(0);
 }
 
 GLFWwindow* RenderManager::GetWindow() const { return window; }
 GLuint RenderManager::GetProgram() const { return program; }
 
-
 void RenderManager::SetupShaders()
 {
     ShaderProgram sp;
-    sp.vertexShader = LoadVertexShader("MyFirstVertexShader.glsl");
-    sp.geometryShader = LoadGeometryShader("MyFirstGeometryShader.glsl");
+    sp.vertexShader = LoadVertexShader("CameraVertexShader.glsl");
     sp.fragmentShader = LoadFragmentShader("MyFirstFragmentShader.glsl");
+
     program = CreateProgram(sp);
 }
 
-void RenderManager::SetupCubeBuffers()
+void RenderManager::SetupFloorBuffers()
 {
     GLfloat cubeVertices[] =
     {
@@ -146,86 +135,70 @@ void RenderManager::SetupCubeBuffers()
         -0.5f, -0.5f, +0.5f,
         +0.5f, -0.5f, +0.5f,
         -0.5f, +0.5f, +0.5f,
-        +0.5f, +0.5f, +0.5f,
+         +0.5f, +0.5f, +0.5f,
     };
 
-    glGenVertexArrays(1, &vaoCube);
-    glBindVertexArray(vaoCube);
-    glGenBuffers(1, &vboCube);
-    glBindBuffer(GL_ARRAY_BUFFER, vboCube);
+    glGenVertexArrays(1, &vaoFloor);
+    glBindVertexArray(vaoFloor);
+
+    glGenBuffers(1, &vboFloor);
+    glBindBuffer(GL_ARRAY_BUFFER, vboFloor);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
 
-void RenderManager::SetupOrthoBuffers()
-{
-    GLfloat orthoVertices[] =
-    {
-        -0.5f, +0.5f, -0.5f,
-        +0.5f, +0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        +0.5f, -0.5f, -0.5f,
-        +0.5f, -0.5f, +0.5f,
-        +0.5f, +0.5f, -0.5f,
-        +0.5f, +0.5f, +0.5f,
-        -0.5f, +0.5f, -0.5f,
-        -0.5f, +0.5f, +0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, +0.5f,
-        +0.5f, -0.5f, +0.5f,
-        -0.5f, +0.5f, +0.5f,
-        +0.5f, +0.5f, +0.5f,
-    };
 
-    glGenVertexArrays(1, &vaoOrtho);
-    glBindVertexArray(vaoOrtho);
-    glGenBuffers(1, &vboOrtho);
-    glBindBuffer(GL_ARRAY_BUFFER, vboOrtho);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(orthoVertices), orthoVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+// Dibuja un modelo 3D cargado desde OBJ.
+// Envía al shader las matrices de proyección, vista y modelo (MVP),
+void RenderManager::DrawModel(const Model& model, const glm::mat4& transform, glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
+{
+    // Matriz de proyección: perspectiva (FOV, aspect ratio, near/far)
+    glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+    // Matriz de vista: posición y orientación de la cámara en el mundo
+    glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+    // Matriz de modelo: posición, rotación y escala del objeto
+    glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(transform));
+    // Indica al fragment shader que debe samplear la textura del modelo
+    glUniform1i(glGetUniformLocation(program, "hasTexture"), 1);
+    model.Render();
 }
 
-void RenderManager::SetupPyramidBuffers()
+
+// Carga una textura usando stb_image y la sube a la GPU.
+// Devuelve el ID de textura OpenGL
+GLuint RenderManager::LoadTexture(const std::string& filePath)
 {
-    GLfloat pyramidVertices[] =
+    int width, height, nrChannels;
+    unsigned char* textureInfo = stbi_load(filePath.c_str(), &width, &height, &nrChannels, 4);
+    if (!textureInfo)
     {
-         0.0f, +0.5f,  0.0f,
-        -0.5f, -0.5f, +0.5f,
-        +0.5f, -0.5f, +0.5f,
+        std::cerr << "No se ha podido cargar la textura: " << filePath << std::endl;
+        return 0;
+    }
 
-         0.0f, +0.5f,  0.0f,
-        +0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
+    GLuint textureID;
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
 
-         0.0f, +0.5f,  0.0f,
-        +0.5f, -0.5f, +0.5f,
-        +0.5f, -0.5f, -0.5f,
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-         0.0f, +0.5f,  0.0f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, +0.5f,
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        -0.5f, -0.5f, -0.5f,
-        +0.5f, -0.5f, -0.5f,
-        +0.5f, -0.5f, +0.5f,
-        -0.5f, -0.5f, -0.5f,
-        +0.5f, -0.5f, +0.5f,
-        -0.5f, -0.5f, +0.5f,
-    };
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureInfo);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
-    glGenVertexArrays(1, &vaoPyramid);
-    glBindVertexArray(vaoPyramid);
-    glGenBuffers(1, &vboPyramid);
-    glBindBuffer(GL_ARRAY_BUFFER, vboPyramid);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(pyramidVertices), pyramidVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    stbi_image_free(textureInfo);
+    return textureID;
+}
+
+void RenderManager::SetColor(const glm::vec4& color)
+{
+    glUniform4f(glGetUniformLocation(program, "color"), color.r, color.g, color.b, color.a);
 }
