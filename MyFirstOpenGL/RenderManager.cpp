@@ -18,6 +18,8 @@ void RenderManager::FramebufferSizeCallback(GLFWwindow* window, int width, int h
     glUniform2f(glGetUniformLocation(GetInstance()->program, "windowSize"), width, height);
 }
 
+
+// Inicializa todo el sistema de renderizado
 bool RenderManager::Init()
 {
     srand(static_cast<unsigned int>(time(NULL)));
@@ -31,16 +33,22 @@ bool RenderManager::Init()
     window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Primitivas 3D", NULL, NULL);
     if (!window) return false;
 
+
     glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
     glfwMakeContextCurrent(window);
 
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) return false;
 
+
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
+
     glClearColor(0.4f, 0.9f, 1.f, 1.f);
+
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    // Depth test necesario para corregir el z-fighting
     glEnable(GL_DEPTH_TEST);
 
     SetupShaders();
@@ -89,22 +97,22 @@ void RenderManager::SetWireframe(bool enabled)
 
 void RenderManager::DrawFloor(const glm::mat4& transform)
 {
-   const glm::mat4& model = transform;
-   glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(model));
-   glUniform1i(glGetUniformLocation(program, "hasTexture"), 0);
-   glBindVertexArray(vaoFloor);
-   glDrawArrays(GL_TRIANGLE_STRIP, 0, 14);
-   glBindVertexArray(0);
+    const glm::mat4& model = transform;
+    glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(model));
+
+    glUniform1i(glGetUniformLocation(program, "hasTexture"), 0); // Se deshabilita la textura para usar color plano.
+    glBindVertexArray(vaoFloor);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 14);
+    glBindVertexArray(0);
 }
 
 GLFWwindow* RenderManager::GetWindow() const { return window; }
 GLuint RenderManager::GetProgram() const { return program; }
 
-
 void RenderManager::SetupShaders()
 {
     ShaderProgram sp;
-    sp.vertexShader = LoadVertexShader("CameraVertexShader.glsl"); 
+    sp.vertexShader = LoadVertexShader("CameraVertexShader.glsl");
     sp.fragmentShader = LoadFragmentShader("MyFirstFragmentShader.glsl");
 
     program = CreateProgram(sp);
@@ -113,43 +121,56 @@ void RenderManager::SetupShaders()
 void RenderManager::SetupFloorBuffers()
 {
     GLfloat cubeVertices[] =
-   {
-       -0.5f, +0.5f, -0.5f,
-       +0.5f, +0.5f, -0.5f,
-       -0.5f, -0.5f, -0.5f,
-       +0.5f, -0.5f, -0.5f,
-       +0.5f, -0.5f, +0.5f,
-       +0.5f, +0.5f, -0.5f,
-       +0.5f, +0.5f, +0.5f,
-       -0.5f, +0.5f, -0.5f,
-       -0.5f, +0.5f, +0.5f,
-       -0.5f, -0.5f, -0.5f,
-       -0.5f, -0.5f, +0.5f,
-       +0.5f, -0.5f, +0.5f,
-       -0.5f, +0.5f, +0.5f,
+    {
+        -0.5f, +0.5f, -0.5f,
+        +0.5f, +0.5f, -0.5f,
+        -0.5f, -0.5f, -0.5f,
+        +0.5f, -0.5f, -0.5f,
+        +0.5f, -0.5f, +0.5f,
+        +0.5f, +0.5f, -0.5f,
         +0.5f, +0.5f, +0.5f,
-   };
+        -0.5f, +0.5f, -0.5f,
+        -0.5f, +0.5f, +0.5f,
+        -0.5f, -0.5f, -0.5f,
+        -0.5f, -0.5f, +0.5f,
+        +0.5f, -0.5f, +0.5f,
+        -0.5f, +0.5f, +0.5f,
+         +0.5f, +0.5f, +0.5f,
+    };
 
     glGenVertexArrays(1, &vaoFloor);
     glBindVertexArray(vaoFloor);
+
     glGenBuffers(1, &vboFloor);
     glBindBuffer(GL_ARRAY_BUFFER, vboFloor);
     glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices, GL_STATIC_DRAW);
+
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid*)0);
     glEnableVertexAttribArray(0);
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }
 
+
+// Dibuja un modelo 3D cargado desde OBJ.
+// Envía al shader las matrices de proyección, vista y modelo (MVP),
 void RenderManager::DrawModel(const Model& model, const glm::mat4& transform, glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
 {
+    // Matriz de proyección: perspectiva (FOV, aspect ratio, near/far)
     glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
+    // Matriz de vista: posición y orientación de la cámara en el mundo
     glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
+    // Matriz de modelo: posición, rotación y escala del objeto
     glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(transform));
+    // Indica al fragment shader que debe samplear la textura del modelo
     glUniform1i(glGetUniformLocation(program, "hasTexture"), 1);
     model.Render();
 }
 
+
+// Carga una textura usando stb_image y la sube a la GPU.
+// Devuelve el ID de textura OpenGL
 GLuint RenderManager::LoadTexture(const std::string& filePath)
 {
     int width, height, nrChannels;
@@ -166,6 +187,7 @@ GLuint RenderManager::LoadTexture(const std::string& filePath)
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -173,8 +195,9 @@ GLuint RenderManager::LoadTexture(const std::string& filePath)
     glGenerateMipmap(GL_TEXTURE_2D);
 
     stbi_image_free(textureInfo);
-    return textureID; 
+    return textureID;
 }
+
 void RenderManager::SetColor(const glm::vec4& color)
 {
     glUniform4f(glGetUniformLocation(program, "color"), color.r, color.g, color.b, color.a);
