@@ -18,8 +18,6 @@ void RenderManager::FramebufferSizeCallback(GLFWwindow* window, int width, int h
     glUniform2f(glGetUniformLocation(GetInstance()->program, "windowSize"), width, height);
 }
 
-
-// Inicializa todo el sistema de renderizado
 bool RenderManager::Init()
 {
     srand(static_cast<unsigned int>(time(NULL)));
@@ -33,13 +31,13 @@ bool RenderManager::Init()
     window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Primitivas 3D", NULL, NULL);
     if (!window) return false;
 
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
     glfwMakeContextCurrent(window);
 
     glewExperimental = GL_TRUE;
     if (glewInit() != GLEW_OK) return false;
-
 
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
@@ -48,7 +46,6 @@ bool RenderManager::Init()
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-    // Depth test necesario para corregir el z-fighting
     glEnable(GL_DEPTH_TEST);
 
     SetupShaders();
@@ -100,7 +97,7 @@ void RenderManager::DrawFloor(const glm::mat4& transform)
     const glm::mat4& model = transform;
     glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(model));
 
-    glUniform1i(glGetUniformLocation(program, "hasTexture"), 0); 
+    glUniform1i(glGetUniformLocation(program, "hasTexture"), 0);
     glBindVertexArray(vaoFloor);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 14);
     glBindVertexArray(0);
@@ -152,25 +149,15 @@ void RenderManager::SetupFloorBuffers()
     glBindVertexArray(0);
 }
 
-
-// Dibuja un modelo 3D cargado desde OBJ.
-// Envía al shader las matrices de proyección, vista y modelo (MVP),
 void RenderManager::DrawModel(const Model& model, const glm::mat4& transform, glm::mat4 projectionMatrix, glm::mat4 viewMatrix)
 {
-    // Matriz de proyección: perspectiva (FOV, aspect ratio, near/far)
     glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projectionMatrix));
-    // Matriz de vista: posición y orientación de la cámara en el mundo
     glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
-    // Matriz de modelo: posición, rotación y escala del objeto
     glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(transform));
-    // Indica al fragment shader que debe samplear la textura del modelo
     glUniform1i(glGetUniformLocation(program, "hasTexture"), 1);
     model.Render();
 }
 
-
-// Carga una textura usando stb_image y la sube a la GPU.
-// Devuelve el ID de textura OpenGL
 GLuint RenderManager::LoadTexture(const std::string& filePath)
 {
     int width, height, nrChannels;
