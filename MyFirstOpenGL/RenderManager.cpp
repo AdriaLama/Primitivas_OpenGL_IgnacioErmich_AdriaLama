@@ -100,7 +100,7 @@ void RenderManager::DrawFloor(const glm::mat4& transform)
     const glm::mat4& model = transform;
     glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(model));
 
-    glUniform1i(glGetUniformLocation(program, "hasTexture"), 0); // Se deshabilita la textura para usar color plano.
+    glUniform1i(glGetUniformLocation(program, "hasTexture"), 0); 
     glBindVertexArray(vaoFloor);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 14);
     glBindVertexArray(0);

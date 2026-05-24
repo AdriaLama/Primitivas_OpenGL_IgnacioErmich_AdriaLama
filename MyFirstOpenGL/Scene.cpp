@@ -1,43 +1,85 @@
 #include "Scene.h"
 #include "RenderManager.h"
 #include "Transform.h"
-
-// Inicializa todos los objetos de la escena
+#include <cstdlib> 
+#include <ctime>   
 
 void Scene::Setup()
 {
+    srand(time(NULL));
+    
+    randomRotation = rand() & 361;
+
+    spawnPoints = {
+        glm::vec3(-1.f,  0.f,  1.f),
+        glm::vec3(0.f,  0.f,  1.f),
+        glm::vec3(1.f,  0.f,  1.f),
+        glm::vec3(-1.f,  0.f,  0.f),
+        glm::vec3(0.f,  0.f,  0.f),
+        glm::vec3(1.f,  0.f,  0.f),
+        glm::vec3(-1.f,  0.f, -1.f),
+        glm::vec3(0.f,  0.f, -1.f),
+        glm::vec3(1.f,  0.f, -1.f),
+    };
+
+    numSpawnPoints = spawnPoints.size();
+
+    for (int i = numSpawnPoints - 1; i > 0; i--)
+    {
+        int j = rand() % (i + 1);
+        glm::vec3 temp = spawnPoints[i];
+        spawnPoints[i] = spawnPoints[j];
+        spawnPoints[j] = temp;
+    }
+
     // Suelo
     floor.position = glm::vec3(0.f, -0.5f, 0.f);
     floor.scale = glm::vec3(3.5f, 1.f, 3.5f);
 
     // Carga los modelos OBJ una sola vez y reutiliza en múltiples instancias
     models.push_back(LoadOBJModel("Assets/Models/troll.obj"));
-    models.push_back(LoadOBJModel("Assets/Models/rock.obj"));
+    models.push_back(LoadOBJModel("Assets/Models/cat.obj"));
+    models.push_back(LoadOBJModel("Assets/Models/woodenTower.obj"));
+    models.push_back(LoadOBJModel("Assets/Models/skull.obj"));
 
     // Cargar las texturas correspondientes a cada modelo
     models[0].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/troll.png");
-    models[1].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/rock.png");
+    models[1].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/cat.jpg");
+    models[2].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/woodenTower.jpg");
+    models[3].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/skull.jpg");
 
-    //Trolls
-    // Tres instancias del mismo modelo, distribuidas horizontalmente.
-    // Cada una con rotación y color de tinte distintos.
-    trolls.push_back({ &models[0], glm::vec3(-0.8f, 0.f, 0.f),  glm::vec3(0.f, 90.f, 0.f),   glm::vec3(0.3f), glm::vec4(0.2f, 1.0f, 0.3f, 1.f) });
-    trolls.push_back({ &models[0], glm::vec3(0.f, 0.f, -0.75f), glm::vec3(0.f, 0.f, 0.f),    glm::vec3(0.3f), glm::vec4(0.2f, 0.5f, 0.5f, 1.f) }); 
-    trolls.push_back({ &models[0], glm::vec3(0.8f, 0.f, 0.f),   glm::vec3(0.f, -90.f, 0.f),  glm::vec3(0.3f), glm::vec4(0.2f, 1.f, 1.0f, 1.f) }); 
+    int idx = 0;
 
-    //Rocas en el suelo
-    // Cuatro rocas distribuidas alrededor del centro de la escena.
-    // Color blanco (sin tinte) para respetar la textura original.
-    rocks.push_back({ &models[1], glm::vec3(0.2f,  0.f,  0.4f),  glm::vec3(0.f,  45.f, 0.f),  glm::vec3(0.4f, 0.2f, 0.2f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
-    rocks.push_back({ &models[1], glm::vec3(-0.2f, 0.f,  0.4f),  glm::vec3(0.f, -45.f, 0.f),  glm::vec3(0.4f, 0.2f, 0.2f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
-    rocks.push_back({ &models[1], glm::vec3(-0.25f, 0.f, -0.1f), glm::vec3(0.f,  45.f, 0.f),  glm::vec3(0.4f, 0.2f, 0.2f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
-    rocks.push_back({ &models[1], glm::vec3(0.25f, 0.f, -0.1f),  glm::vec3(0.f, -45.f, 0.f),  glm::vec3(0.4f, 0.2f, 0.2f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
+    trolls.push_back({ &models[0], spawnPoints[idx++],  glm::vec3(0.f, 0.f, 0.f),   glm::vec3(0.f), glm::vec4(0.2f, 1.0f, 0.3f, 1.f) });
+    trolls.push_back({ &models[0], spawnPoints[idx++], glm::vec3(0.f, 0.f, 0.f),    glm::vec3(0.f), glm::vec4(0.2f, 0.5f, 0.5f, 1.f) });
+    trolls.push_back({ &models[0], spawnPoints[idx++],   glm::vec3(0.f, 0.f, 0.f),  glm::vec3(0.f), glm::vec4(0.2f, 1.f, 1.0f, 1.f) });
 
-    // Nubes (reutilizando modelo de roca) 
-    rocks.push_back({ &models[1], glm::vec3(0.25f,  1.f,   -1.f), glm::vec3(-10.f,  0.f, 10.f), glm::vec3(0.6f, 0.2f, 0.2f), glm::vec4(0.7f, 0.7f, 1.f, 1.f) });
-    rocks.push_back({ &models[1], glm::vec3(1.f,    1.25f,  1.f), glm::vec3(15.f,  0.f, 15.f), glm::vec3(0.8f, 0.3f, 0.3f), glm::vec4(0.7f, 0.7f, 1.f, 1.f) });
-    rocks.push_back({ &models[1], glm::vec3(-1.75f, 1.25f,  0.8f),glm::vec3(12.f, 10.f, 15.f), glm::vec3(0.7f, 0.4f, 0.2f), glm::vec4(0.7f, 0.7f, 1.f, 1.f) });
+    cats.push_back({ &models[1], spawnPoints[idx++],  glm::vec3(-90.f, 0.f, 0.f),  glm::vec3(0.f, 0.f, 0.f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
+
+    woodenTowers.push_back({ &models[2], spawnPoints[idx++],  glm::vec3(0.f, 0.f, 0.f),  glm::vec3(0.f, 0.f, 0.f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
+
+    skulls.push_back({ &models[3], spawnPoints[idx++],  glm::vec3(-90.f, 0.f, 0.f),  glm::vec3(0.f, 0.f, 0.f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
+    skulls.push_back({ &models[3], spawnPoints[idx++],  glm::vec3(-90.f, 0.f, 0.f),  glm::vec3(0.f, 0.f, 0.f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
+    skulls.push_back({ &models[3], spawnPoints[idx++],  glm::vec3(-90.f, 0.f, 0.f),  glm::vec3(0.f, 0.f, 0.f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
+
+    for (RenderObject& obj : trolls) { 
+        obj.rotation.y = rand() % 361; 
+        obj.scale = glm::vec3(0.2f + (rand() % 100) / 100.f * (0.5f - 0.2f));
+    }
+    for (RenderObject& obj : cats) { 
+        obj.rotation.z = rand() % 361; 
+        obj.scale = glm::vec3(0.015f + (rand() % 100) / 100.f * (0.015f - 0.02f));
+    }
+    for (RenderObject& obj : woodenTowers) { 
+        obj.rotation.y = rand() % 361; 
+        obj.scale = glm::vec3(0.15f + (rand() % 100) / 100.f * (0.15f - 0.20f));
+    }
+    for (RenderObject& obj : skulls) { 
+        obj.rotation.z = rand() % 361; 
+        obj.scale = glm::vec3(0.01f + (rand() % 100) / 100.f * (0.01f - 0.015f));
+    }
 }
+
 
 void Scene::Update(float dt)
 {
@@ -75,8 +117,31 @@ void Scene::Render()
         RM->DrawModel(*obj.model, matrix, projection, view);
     }
 
-    //Rocas y nubes
-    for (RenderObject& obj : rocks)
+
+    for (RenderObject& obj : cats)
+    {
+        RM->SetColor(obj.color);
+        glm::mat4 matrix = GenerateTranslationMatrix(obj.position)
+            * GenerateRotationMatrix(glm::vec3(1.f, 0.f, 0.f), obj.rotation.x)
+            * GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), obj.rotation.y)
+            * GenerateRotationMatrix(glm::vec3(0.f, 0.f, 1.f), obj.rotation.z)
+            * GenerateScaleMatrix(obj.scale);
+        RM->DrawModel(*obj.model, matrix, projection, view);
+    }
+
+    for (RenderObject& obj : woodenTowers)
+    {
+        RM->SetColor(obj.color);
+        glm::mat4 matrix = GenerateTranslationMatrix(obj.position)
+            * GenerateRotationMatrix(glm::vec3(1.f, 0.f, 0.f), obj.rotation.x)
+            * GenerateRotationMatrix(glm::vec3(0.f, 1.f, 0.f), obj.rotation.y)
+            * GenerateRotationMatrix(glm::vec3(0.f, 0.f, 1.f), obj.rotation.z)
+            * GenerateScaleMatrix(obj.scale);
+        RM->DrawModel(*obj.model, matrix, projection, view);
+    }
+
+
+    for (RenderObject& obj : skulls)
     {
         RM->SetColor(obj.color);
         glm::mat4 matrix = GenerateTranslationMatrix(obj.position)
