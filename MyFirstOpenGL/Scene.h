@@ -22,8 +22,15 @@ public:
 private:
 
     std::vector<Model> models;
+    std::vector<glm::vec3> spawnPoints;
+    int numSpawnPoints;
+    int randomRotation;
+    int randomScale;
     std::vector<RenderObject> trolls;
     std::vector<RenderObject> rocks;
+    std::vector<RenderObject> cats;
+    std::vector<RenderObject> woodenTowers;
+    std::vector<RenderObject> skulls;
     Camera camera;
     GameObject floor;
 
