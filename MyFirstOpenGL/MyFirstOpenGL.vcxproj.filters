@@ -54,15 +54,21 @@
     <ClCompile Include="InputManager.cpp">
       <Filter>Archivos de origen</Filter>
     </ClCompile>
+    <ClCompile Include="Flashlight.cpp">
+      <Filter>Archivos de recursos</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="MyFirstVertexShader.glsl">
-      <Filter>Shaders\Vertex Shader</Filter>
-    </None>
     <None Include="MyFirstFragmentShader.glsl">
       <Filter>Shaders\Fragment Shader</Filter>
     </None>
     <None Include="CameraVertexShader.glsl">
+      <Filter>Shaders\Vertex Shader</Filter>
+    </None>
+    <None Include="FlashlightVertexShader.glsl">
+      <Filter>Shaders\Vertex Shader</Filter>
+    </None>
+    <None Include="FlashlightFragmentShader.glsl">
       <Filter>Shaders\Fragment Shader</Filter>
     </None>
   </ItemGroup>
@@ -92,6 +98,9 @@
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
     <ClInclude Include="InputManager.h">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
+    <ClInclude Include="Flashlight.h">
       <Filter>Archivos de encabezado</Filter>
     </ClInclude>
   </ItemGroup>

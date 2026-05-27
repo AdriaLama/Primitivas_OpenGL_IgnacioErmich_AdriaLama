@@ -3,6 +3,7 @@
 #include "Model.h"
 #include <vector>
 #include "Camera.h"
+#include "Flashlight.h"
 
 struct RenderObject         
 {
@@ -31,6 +32,7 @@ private:
     std::vector<RenderObject> skulls;
     Camera camera;
     GameObject floor;
+    Flashlight flashlight;
 
     void Render();
 };

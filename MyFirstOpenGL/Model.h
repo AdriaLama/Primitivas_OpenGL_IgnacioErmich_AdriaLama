@@ -19,6 +19,7 @@ private:
     GLuint VAO = 0;
     GLuint VBO = 0;    
     GLuint uvVBO = 0;    
+    GLuint normalsVBO = 0;
     unsigned int numVertexs = 0;
 };
 
