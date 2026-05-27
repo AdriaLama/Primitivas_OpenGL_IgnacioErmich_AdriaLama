@@ -109,8 +109,8 @@ GLuint RenderManager::GetProgram() const { return program; }
 void RenderManager::SetupShaders()
 {
     ShaderProgram sp;
-    sp.vertexShader = LoadVertexShader("CameraVertexShader.glsl");
-    sp.fragmentShader = LoadFragmentShader("MyFirstFragmentShader.glsl");
+    sp.vertexShader = LoadVertexShader("FlashlightVertexShader.glsl");
+    sp.fragmentShader = LoadFragmentShader("FlashlightFragmentShader.glsl");
 
     program = CreateProgram(sp);
 }

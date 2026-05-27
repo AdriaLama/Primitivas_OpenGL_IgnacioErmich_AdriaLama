@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Flashlight.cpp" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="RenderManager.cpp" />
@@ -32,11 +33,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="CameraVertexShader.glsl" />
+    <None Include="FlashlightFragmentShader.glsl" />
+    <None Include="FlashlightVertexShader.glsl" />
     <None Include="MyFirstFragmentShader.glsl" />
-    <None Include="MyFirstVertexShader.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Flashlight.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="InputManager.h" />
     <ClInclude Include="Model.h" />

@@ -8,8 +8,6 @@ void Scene::Setup()
 {
     srand(time(NULL));
     
-    randomRotation = rand() & 361;
-
     spawnPoints = {
         glm::vec3(-1.f,  0.f,  1.f),
         glm::vec3(0.f,  0.f,  1.f),
@@ -84,6 +82,7 @@ void Scene::Setup()
 void Scene::Update(float dt)
 {
     Render();
+    flashlight.Update(camera.GetCamPos(), camera.GetCamFront(), dt);
     camera.Update(dt);
 }
 
@@ -95,6 +94,13 @@ void Scene::Update(float dt)
 void Scene::Render()
 {
     RenderManager* RM = RenderManager::GetInstance();
+    flashlight.SendToShader(RM->GetProgram());
+
+    glUniform3f(glGetUniformLocation(RM->GetProgram(), "ambientColor"), 0.15f, 0.15f, 0.2f);
+
+  /*  glUniform3f(glGetUniformLocation(RM->GetProgram(), "sunDirection"), 0.f, 1.f, 0.f);
+    glUniform3f(glGetUniformLocation(RM->GetProgram(), "sunColor"), 1.f, 0.9f, 0.7f);
+    glUniform1i(glGetUniformLocation(RM->GetProgram(), "sunActive"), 1);*/
 
     // Obtener matrices de cámara actualizadas para este frame
     glm::mat4 projection = camera.GetProjectionMatrix();

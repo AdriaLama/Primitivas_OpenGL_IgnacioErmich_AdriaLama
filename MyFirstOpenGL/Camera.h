@@ -11,7 +11,8 @@ public:
     void Update(double dt);
     glm::mat4 GetViewMatrix();
     glm::mat4 GetProjectionMatrix();
-
+    glm::vec3 GetCamPos() const { return camPos; }
+    glm::vec3 GetCamFront() const { return camFront; }
 private:
     // Posicion y orientacion
     glm::vec3 camPos = glm::vec3(0.f, 1.f, 3.f);
