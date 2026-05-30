@@ -10,24 +10,24 @@ uniform sampler2D textureSampler;
 uniform vec4 color;
 uniform int hasTexture;
 
+// Iluminacion global
 uniform vec3 ambientColor;
-
 uniform vec3 sunDirection;
 uniform vec3 sunColor;
-uniform int sunActive; 
 
+// Linterna
 uniform int flashlightOn;
 uniform vec3 flashlightPos;
 uniform vec3 flashlightDir;
-uniform float flashlightInnerCone; 
-uniform float flashlightOuterCone; 
-uniform float flashlightRange;   
+uniform float flashlightInnerCone;
+uniform float flashlightOuterCone;
+uniform float flashlightRange;
 uniform float flashlightIntensity;
-
 
 void main()
 {
     vec4 baseColor;
+
     if (hasTexture == 1)
     {
         vec2 adjustedTexCoord = vec2(uvsFragmentShader.x, 1.0 - uvsFragmentShader.y);
@@ -40,45 +40,25 @@ void main()
 
     vec3 normal = normalize(normalFragmentShader);
 
+    // Ambient
     vec3 ambient = ambientColor * baseColor.rgb;
 
-    vec3 diffuse = vec3(0.0);
-    if (sunActive == 1)
-    {
-        float diffuseAngle = max(dot(normal, normalize(sunDirection)), 0.15);
-        diffuse = sunColor * baseColor.rgb * diffuseAngle;
-    }
-    else
-    {
-        diffuse = baseColor.rgb * 0.15;
-    }
-
+    // Spotlight
     vec3 spotlight = vec3(0.0);
     if (flashlightOn == 1)
     {
-        vec3 toFragment = fragWorldPos - flashlightPos;
-        float distance = length(toFragment);
+        vec3 lightDir = normalize(flashlightPos - fragWorldPos);
+        float distance = length(flashlightPos - fragWorldPos);
+        float theta = dot(lightDir, normalize(-flashlightDir));
+        float epsilon = flashlightInnerCone - flashlightOuterCone;
+        float intensity = clamp((theta - flashlightOuterCone) / epsilon, 0.0, 1.0);
+        float attenuation = 1.0 / (distance * distance);
 
-        if (distance < flashlightRange)
-        {
-            vec3 toFragmentDir = normalize(toFragment);
+        // Diffuse Lambert
+        float diffuseAngle = max(dot(normal, lightDir), 0.0);
 
-            // Angulo entre la direccion de la linterna y el vector al fragmento
-            float theta = dot(toFragmentDir, normalize(flashlightDir));
-
-            // Interpolamos suavemente entre inner y outer cone
-            float intensity = clamp((theta - flashlightOuterCone) / (flashlightInnerCone - flashlightOuterCone),0.0, 1.0);
-
-            // Atenuacion por distancia (cuadrado inverso)
-            float attenuation = 1.0 / (distance * distance);
-
-            float diffuseAngle = max(dot(normal, -toFragmentDir), 0.0);
-
-            spotlight = baseColor.rgb * intensity * attenuation * diffuseAngle * flashlightIntensity;
-;
-        }
+        spotlight = baseColor.rgb * intensity * attenuation * flashlightIntensity;
     }
 
-    vec3 result = ambient + diffuse + spotlight;
-    fragColor = vec4(result, baseColor.a);
+    fragColor = vec4(clamp(ambient + diffuse + spotlight, 0.0, 1.0), baseColor.a);
 }
