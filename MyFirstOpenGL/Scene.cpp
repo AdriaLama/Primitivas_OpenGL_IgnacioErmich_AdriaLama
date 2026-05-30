@@ -81,11 +81,28 @@ void Scene::Setup()
 
 void Scene::Update(float dt)
 {
+    sunAngle += (360.f / CYCLE_DURATION) * dt;
+    if (sunAngle >= 360.f) sunAngle -= 360.f;
+
+    float rad = glm::radians(sunAngle);
+
+    glm::vec3 sunPos = glm::vec3(cos(rad) * 10.f, sin(rad) * 10.f, 0.f);
+    glm::vec3 sceneCenter = glm::vec3(0.f, 0.f, 0.f);
+
+    glm::mat4 sunView = glm::lookAt(sunPos, sceneCenter, glm::vec3(0.f, 0.f, 1.f));
+    sunDirection = glm::vec3(sunView * glm::vec4(0.f, 0.f, -1.f, 0.f));
+
+    float t = (sin(rad) + 1.f) * 0.5f;
+    glm::vec3 nightColor = glm::vec3(0.0f, 0.0f, 0.08f);
+    glm::vec3 dayColor = glm::vec3(0.2f, 0.18f, 0.08f);
+    // mix: Sirve para interpolar entre el nightColor y el dayColor
+    ambientColor = glm::mix(nightColor, dayColor, t);
+    sunIntensity = t * 1.2f;
+
     Render();
     flashlight.Update(camera.GetCamPos(), camera.GetCamFront(), dt);
     camera.Update(dt);
 }
-
 
 // Recorre todos los objetos de la escena y los envía a renderizar.
 // Para cada objeto construye su matriz de modelo : Translation * RotationX * RotationY * RotationZ * Scale
@@ -94,9 +111,16 @@ void Scene::Update(float dt)
 void Scene::Render()
 {
     RenderManager* RM = RenderManager::GetInstance();
-    flashlight.SendToShader(RM->GetProgram());
+    GLuint prog = RM->GetProgram();
 
-    glUniform3f(glGetUniformLocation(RM->GetProgram(), "ambientColor"), 0.15f, 0.15f, 0.2f);
+    flashlight.SendToShader(prog);
+
+    // Sol y ambiente
+    glUniform3f(glGetUniformLocation(prog, "ambientColor"),
+        ambientColor.r, ambientColor.g, ambientColor.b);
+    glUniform3f(glGetUniformLocation(prog, "sunDirection"),
+        sunDirection.x, sunDirection.y, sunDirection.z);
+    glUniform1f(glGetUniformLocation(prog, "sunIntensity"), sunIntensity);
 
     // Obtener matrices de cámara actualizadas para este frame
     glm::mat4 projection = camera.GetProjectionMatrix();

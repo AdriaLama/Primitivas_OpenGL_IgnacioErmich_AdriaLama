@@ -33,6 +33,11 @@ private:
     Camera camera;
     GameObject floor;
     Flashlight flashlight;
+    float sunAngle = 0.f;
+    glm::vec3 sunDirection = glm::vec3(0.f, 1.f, 0.f);
+    glm::vec3 ambientColor = glm::vec3(0.15f, 0.15f, 0.2f);
+    float sunIntensity = 1.0f;
+    float CYCLE_DURATION = 20.f;
 
     void Render();
 };
