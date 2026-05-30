@@ -24,7 +24,7 @@ private:
     float range = 10.f;
 
     //Intensidad de la luz
-    float intensity = 12.5f;
+    float intensity = 8.5f;
 
     // Estado on/off
     bool isOn = false;
