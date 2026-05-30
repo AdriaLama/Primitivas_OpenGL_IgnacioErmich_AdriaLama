@@ -9,10 +9,13 @@ void Flashlight::Update(const glm::vec3& camPos, const glm::vec3& camFront, floa
 
     InputManager* IM = InputManager::GetInstance();
 
-    if (IM->IsKeyPressed(GLFW_KEY_F))
-    {
+    static bool wasPressed = false;
+    bool isPressed = IM->IsKeyPressed(GLFW_KEY_F); 
+
+    if (isPressed && !wasPressed)
         isOn = !isOn;
-    }
+
+    wasPressed = isPressed;
 }
 
 

@@ -1,5 +1,4 @@
 #include "InputManager.h"
-#include <cstring>
 
 InputManager* InputManager::instance = nullptr;
 
@@ -12,12 +11,9 @@ InputManager* InputManager::GetInstance()
 
 void InputManager::Update(GLFWwindow* window)
 {
-    memcpy(previousKeys, currentKeys, sizeof(currentKeys));
-
     for (int key = 0; key < GLFW_KEY_LAST; key++)
         currentKeys[key] = glfwGetKey(window, key) == GLFW_PRESS;
 
-   
     double mx, my;
     glfwGetCursorPos(window, &mx, &my);
     mouseX = static_cast<float>(mx);
@@ -26,6 +22,5 @@ void InputManager::Update(GLFWwindow* window)
 
 bool InputManager::IsKeyPressed(int key) const
 {
-    return currentKeys[key] && !previousKeys[key];
+    return currentKeys[key];
 }
-

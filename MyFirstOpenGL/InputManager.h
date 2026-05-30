@@ -14,7 +14,6 @@ public:
     float GetMouseY() const { return mouseY; }
 
     bool currentKeys[GLFW_KEY_LAST] = {};
-    bool previousKeys[GLFW_KEY_LAST] = {};
 
 private:
     InputManager() = default;
