@@ -30,6 +30,8 @@ private:
     std::vector<RenderObject> cats;
     std::vector<RenderObject> woodenTowers;
     std::vector<RenderObject> skulls;
+    RenderObject sun;
+    RenderObject moon;
     Camera camera;
     GameObject floor;
     Flashlight flashlight;
@@ -40,4 +42,5 @@ private:
     float CYCLE_DURATION = 20.f;
 
     void Render();
+    void DayNightCycle(float dt);
 };
