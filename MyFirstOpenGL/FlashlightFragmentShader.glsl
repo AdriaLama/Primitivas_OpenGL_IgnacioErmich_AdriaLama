@@ -12,8 +12,6 @@ uniform int hasTexture;
 
 // Iluminacion global
 uniform vec3 ambientColor;
-uniform vec3 sunDirection;
-uniform vec3 sunColor;
 
 // Linterna
 uniform int flashlightOn;
@@ -57,8 +55,8 @@ void main()
         // Diffuse Lambert
         float diffuseAngle = max(dot(normal, lightDir), 0.0);
 
-        spotlight = baseColor.rgb * intensity * attenuation * flashlightIntensity;
+        spotlight = baseColor.rgb * intensity * attenuation * diffuseAngle * flashlightIntensity;
     }
 
-    fragColor = vec4(clamp(ambient + diffuse + spotlight, 0.0, 1.0), baseColor.a);
+    fragColor = vec4(clamp(ambient + spotlight, 0.0, 1.0), baseColor.a);
 }
