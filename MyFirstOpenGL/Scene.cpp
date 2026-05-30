@@ -4,10 +4,9 @@
 #include <cstdlib> 
 #include <ctime>   
 
-void Scene::Setup()
+
+void Scene::InitSpawnPoints()
 {
-    srand(time(NULL));
-    
     spawnPoints = {
         glm::vec3(-1.f,  0.f,  1.f),
         glm::vec3(0.f,  0.f,  1.f),
@@ -29,12 +28,10 @@ void Scene::Setup()
         spawnPoints[i] = spawnPoints[j];
         spawnPoints[j] = temp;
     }
+}
 
-    // Suelo
-    floor.position = glm::vec3(0.f, -0.5f, 0.f);
-    floor.scale = glm::vec3(3.5f, 1.f, 3.5f);
-
-    // Carga los modelos OBJ una sola vez y reutiliza en múltiples instancias
+void Scene::LoadModels()
+{
     models.push_back(LoadOBJModel("Assets/Models/troll.obj"));
     models.push_back(LoadOBJModel("Assets/Models/cat.obj"));
     models.push_back(LoadOBJModel("Assets/Models/woodenTower.obj"));
@@ -42,14 +39,16 @@ void Scene::Setup()
     models.push_back(LoadOBJModel("Assets/Models/sun.obj"));
     models.push_back(LoadOBJModel("Assets/Models/moon.obj"));
 
-    // Cargar las texturas correspondientes a cada modelo
     models[0].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/troll.png");
     models[1].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/cat.jpg");
     models[2].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/woodenTower.jpg");
     models[3].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/skull.jpg");
     models[4].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/sun.jpg");
     models[5].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/moon.png");
+}
 
+void Scene::SpawnObjects()
+{
     int idx = 0;
 
     trolls.push_back({ &models[0], spawnPoints[idx++],  glm::vec3(0.f, 0.f, 0.f),   glm::vec3(0.f), glm::vec4(0.2f, 1.0f, 0.3f, 1.f) });
@@ -64,28 +63,44 @@ void Scene::Setup()
     skulls.push_back({ &models[3], spawnPoints[idx++],  glm::vec3(-90.f, 0.f, 0.f),  glm::vec3(0.f, 0.f, 0.f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
     skulls.push_back({ &models[3], spawnPoints[idx++],  glm::vec3(-90.f, 0.f, 0.f),  glm::vec3(0.f, 0.f, 0.f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
 
+    // Sol y luna no ocupan spawn points, tienen posicion fija
     sun = { &models[4], glm::vec3(-4.f, 1.5f, 0.f),  glm::vec3(-0.f, 0.f, 0.f),  glm::vec3(0.0010f, 0.0010f, 0.0010f), glm::vec4(1.f, 1.f, 1.f, 1.f) };
-
     moon = { &models[5], glm::vec3(4.f, 1.5f, 0.f),  glm::vec3(-0.f, 0.f, 0.f),  glm::vec3(0.25f, 0.25f, 0.25f), glm::vec4(1.f, 1.f, 1.f, 1.f) };
+}
 
-    for (RenderObject& obj : trolls) { 
-        obj.rotation.y = rand() % 361; 
+void Scene::RandomizeObjects()
+{
+    for (RenderObject& obj : trolls) {
+        obj.rotation.y = rand() % 361;
         obj.scale = glm::vec3(0.2f + (rand() % 100) / 100.f * (0.5f - 0.2f));
     }
-    for (RenderObject& obj : cats) { 
-        obj.rotation.z = rand() % 361; 
+    for (RenderObject& obj : cats) {
+        obj.rotation.z = rand() % 361;
         obj.scale = glm::vec3(0.015f + (rand() % 100) / 100.f * (0.015f - 0.02f));
     }
-    for (RenderObject& obj : woodenTowers) { 
-        obj.rotation.y = rand() % 361; 
+    for (RenderObject& obj : woodenTowers) {
+        obj.rotation.y = rand() % 361;
         obj.scale = glm::vec3(0.15f + (rand() % 100) / 100.f * (0.15f - 0.20f));
     }
-    for (RenderObject& obj : skulls) { 
-        obj.rotation.z = rand() % 361; 
+    for (RenderObject& obj : skulls) {
+        obj.rotation.z = rand() % 361;
         obj.scale = glm::vec3(0.01f + (rand() % 100) / 100.f * (0.01f - 0.015f));
     }
 }
 
+void Scene::Setup()
+{
+    srand(time(NULL));
+
+    InitSpawnPoints();
+
+    floor.position = glm::vec3(0.f, -0.5f, 0.f);
+    floor.scale = glm::vec3(3.5f, 1.f, 3.5f);
+
+    LoadModels();
+    SpawnObjects();
+    RandomizeObjects();
+}
 
 void Scene::Update(float dt)
 {
@@ -105,45 +120,33 @@ void Scene::DayNightCycle(float dt)
     glm::vec3 sunPos = glm::vec3(cos(rad) * 10.f, sin(rad) * 10.f, 0.f);
     glm::vec3 sceneCenter = glm::vec3(0.f, 0.f, 0.f);
 
+    // Calcular direccion del sol a partir de su vista
     glm::mat4 sunView = glm::lookAt(sunPos, sceneCenter, glm::vec3(0.f, 0.f, 1.f));
     sunDirection = glm::vec3(sunView * glm::vec4(0.f, 0.f, -1.f, 0.f));
 
     sun.position = sunPos;
-    moon.position = -sunPos;
+    moon.position = -sunPos;// La luna esta siempre en el lado opuesto al sol
 
+    // t = 0 de noche, t = 1 de dia
     float t = (sin(rad) + 1.f) * 0.5f;
-    glm::vec3 nightColor = glm::vec3(0.0f, 0.0f, 0.08f);
-    glm::vec3 dayColor = glm::vec3(0.2f, 0.18f, 0.08f);
+    glm::vec3 nightColor = glm::vec3(.08f, 0.08f, 0.2f);
+    glm::vec3 dayColor = glm::vec3(0.4f, 0.35f, 0.1f);
     ambientColor = glm::mix(nightColor, dayColor, t);
     sunIntensity = t * 1.2f;
 }
 
-// Recorre todos los objetos de la escena y los envía a renderizar.
-// Para cada objeto construye su matriz de modelo : Translation * RotationX * RotationY * RotationZ * Scale
-// Se obtienen las matrices de proyección y vista de la cámara y se pasan al RenderManager junto con la geometría del modelo.
-
-void Scene::Render()
+void Scene::RenderFloor(glm::mat4 projection, glm::mat4 view)
 {
     RenderManager* RM = RenderManager::GetInstance();
-    GLuint prog = RM->GetProgram();
-
-    flashlight.SendToShader(prog);
-
-    // Sol y ambiente
-    glUniform3f(glGetUniformLocation(prog, "ambientColor"),ambientColor.r, ambientColor.g, ambientColor.b);
-    glUniform3f(glGetUniformLocation(prog, "sunDirection"),sun.position.x, sun.position.y, sun.position.z);
-    glUniform1f(glGetUniformLocation(prog, "sunIntensity"), sunIntensity);
-
-    // Obtener matrices de cámara actualizadas para este frame
-    glm::mat4 projection = camera.GetProjectionMatrix();
-    glm::mat4 view = camera.GetViewMatrix();
-
-    // Suelo
-    RM->SetColor(glm::vec4(0.92f, 0.75f, 0.45f, 1.f)); 
+    RM->SetColor(glm::vec4(0.92f, 0.75f, 0.45f, 1.f));
     glm::mat4 floorModel = GenerateTranslationMatrix(floor.position) * GenerateScaleMatrix(floor.scale);
     RM->DrawFloor(floorModel);
+}
 
-    //Trolls
+void Scene::RenderObjects(glm::mat4 projection, glm::mat4 view)
+{
+    RenderManager* RM = RenderManager::GetInstance();
+
     for (RenderObject& obj : trolls)
     {
         RM->SetColor(obj.color);
@@ -154,7 +157,6 @@ void Scene::Render()
             * GenerateScaleMatrix(obj.scale);
         RM->DrawModel(*obj.model, matrix, projection, view);
     }
-
 
     for (RenderObject& obj : cats)
     {
@@ -178,7 +180,6 @@ void Scene::Render()
         RM->DrawModel(*obj.model, matrix, projection, view);
     }
 
-
     for (RenderObject& obj : skulls)
     {
         RM->SetColor(obj.color);
@@ -189,8 +190,12 @@ void Scene::Render()
             * GenerateScaleMatrix(obj.scale);
         RM->DrawModel(*obj.model, matrix, projection, view);
     }
+}
 
-    //Sol y Luna
+void Scene::RenderSkyObjects(glm::mat4 projection, glm::mat4 view)
+{
+    RenderManager* RM = RenderManager::GetInstance();
+
     RM->SetColor(sun.color);
     glm::mat4 matrix = GenerateTranslationMatrix(sun.position) * GenerateScaleMatrix(sun.scale);
     RM->DrawModel(*sun.model, matrix, projection, view);
@@ -198,5 +203,25 @@ void Scene::Render()
     RM->SetColor(moon.color);
     glm::mat4 moonMatrix = GenerateTranslationMatrix(moon.position) * GenerateScaleMatrix(moon.scale);
     RM->DrawModel(*moon.model, moonMatrix, projection, view);
+}
+
+void Scene::Render()
+{
+    RenderManager* RM = RenderManager::GetInstance();
+    GLuint prog = RM->GetProgram();
+
+    flashlight.SendToShader(prog);
+
+    glUniform3f(glGetUniformLocation(prog, "ambientColor"), ambientColor.r, ambientColor.g, ambientColor.b);
+    glUniform3f(glGetUniformLocation(prog, "sunDirection"), sun.position.x, sun.position.y, sun.position.z);
+    glUniform1f(glGetUniformLocation(prog, "sunIntensity"), sunIntensity);
+
+    glm::mat4 projection = camera.GetProjectionMatrix();
+    glm::mat4 view = camera.GetViewMatrix();
+
+    RenderFloor(projection, view);
+    RenderObjects(projection, view);
+    RenderSkyObjects(projection, view);
+
     glEnable(GL_CULL_FACE);
 }

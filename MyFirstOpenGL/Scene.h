@@ -17,6 +17,10 @@ struct RenderObject
 class Scene
 {
 public:
+    void InitSpawnPoints();
+    void LoadModels();
+    void SpawnObjects();
+    void RandomizeObjects();
     void Setup();
     void Update(float dt);
 
@@ -36,11 +40,14 @@ private:
     GameObject floor;
     Flashlight flashlight;
     float sunAngle = 0.f;
-    glm::vec3 sunDirection = glm::vec3(0.f, 1.f, 0.f);
-    glm::vec3 ambientColor = glm::vec3(0.15f, 0.15f, 0.2f);
-    float sunIntensity = 1.0f;
+    glm::vec3 sunDirection;
+    glm::vec3 ambientColor;
+    float sunIntensity;
     float CYCLE_DURATION = 20.f;
 
     void Render();
     void DayNightCycle(float dt);
+    void RenderFloor(glm::mat4 projection, glm::mat4 view);
+    void RenderObjects(glm::mat4 projection, glm::mat4 view);
+    void RenderSkyObjects(glm::mat4 projection, glm::mat4 view);
 };

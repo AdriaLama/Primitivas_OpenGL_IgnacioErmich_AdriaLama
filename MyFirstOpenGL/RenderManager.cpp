@@ -42,7 +42,7 @@ bool RenderManager::Init()
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    glClearColor(0.4f, 0.9f, 1.f, 1.f);
+    glClearColor(0.f, 0.f, 0.f, 0.f);
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
@@ -109,8 +109,8 @@ GLuint RenderManager::GetProgram() const { return program; }
 void RenderManager::SetupShaders()
 {
     ShaderProgram sp;
-    sp.vertexShader = LoadVertexShader("FlashlightVertexShader.glsl");
-    sp.fragmentShader = LoadFragmentShader("FlashlightFragmentShader.glsl");
+    sp.vertexShader = LoadVertexShader("VertexShader.glsl");
+    sp.fragmentShader = LoadFragmentShader("FragmentShader.glsl");
 
     program = CreateProgram(sp);
 }

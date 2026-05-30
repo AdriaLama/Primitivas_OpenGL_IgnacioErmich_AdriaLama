@@ -65,10 +65,10 @@
     <None Include="CameraVertexShader.glsl">
       <Filter>Shaders\Vertex Shader</Filter>
     </None>
-    <None Include="FlashlightVertexShader.glsl">
+    <None Include="VertexShader.glsl">
       <Filter>Shaders\Vertex Shader</Filter>
     </None>
-    <None Include="FlashlightFragmentShader.glsl">
+    <None Include="FragmentShader.glsl">
       <Filter>Shaders\Fragment Shader</Filter>
     </None>
   </ItemGroup>
