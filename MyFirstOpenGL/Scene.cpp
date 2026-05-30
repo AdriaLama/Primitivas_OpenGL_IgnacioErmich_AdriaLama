@@ -39,12 +39,16 @@ void Scene::Setup()
     models.push_back(LoadOBJModel("Assets/Models/cat.obj"));
     models.push_back(LoadOBJModel("Assets/Models/woodenTower.obj"));
     models.push_back(LoadOBJModel("Assets/Models/skull.obj"));
+    models.push_back(LoadOBJModel("Assets/Models/sun.obj"));
+    models.push_back(LoadOBJModel("Assets/Models/moon.obj"));
 
     // Cargar las texturas correspondientes a cada modelo
     models[0].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/troll.png");
     models[1].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/cat.jpg");
     models[2].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/woodenTower.jpg");
     models[3].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/skull.jpg");
+    models[4].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/sun.jpg");
+    models[5].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/moon.png");
 
     int idx = 0;
 
@@ -59,6 +63,10 @@ void Scene::Setup()
     skulls.push_back({ &models[3], spawnPoints[idx++],  glm::vec3(-90.f, 0.f, 0.f),  glm::vec3(0.f, 0.f, 0.f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
     skulls.push_back({ &models[3], spawnPoints[idx++],  glm::vec3(-90.f, 0.f, 0.f),  glm::vec3(0.f, 0.f, 0.f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
     skulls.push_back({ &models[3], spawnPoints[idx++],  glm::vec3(-90.f, 0.f, 0.f),  glm::vec3(0.f, 0.f, 0.f), glm::vec4(1.f, 1.f, 1.f, 1.f) });
+
+    sun = { &models[4], glm::vec3(-4.f, 1.5f, 0.f),  glm::vec3(-0.f, 0.f, 0.f),  glm::vec3(0.0010f, 0.0010f, 0.0010f), glm::vec4(1.f, 1.f, 1.f, 1.f) };
+
+    moon = { &models[5], glm::vec3(4.f, 1.5f, 0.f),  glm::vec3(-0.f, 0.f, 0.f),  glm::vec3(0.25f, 0.25f, 0.25f), glm::vec4(1.f, 1.f, 1.f, 1.f) };
 
     for (RenderObject& obj : trolls) { 
         obj.rotation.y = rand() % 361; 
@@ -81,6 +89,14 @@ void Scene::Setup()
 
 void Scene::Update(float dt)
 {
+    DayNightCycle(dt);
+    Render();
+    flashlight.Update(camera.GetCamPos(), camera.GetCamFront(), dt);
+    camera.Update(dt);
+}
+
+void Scene::DayNightCycle(float dt)
+{
     sunAngle += (360.f / CYCLE_DURATION) * dt;
     if (sunAngle >= 360.f) sunAngle -= 360.f;
 
@@ -92,16 +108,14 @@ void Scene::Update(float dt)
     glm::mat4 sunView = glm::lookAt(sunPos, sceneCenter, glm::vec3(0.f, 0.f, 1.f));
     sunDirection = glm::vec3(sunView * glm::vec4(0.f, 0.f, -1.f, 0.f));
 
+    sun.position = sunPos;
+    moon.position = -sunPos;
+
     float t = (sin(rad) + 1.f) * 0.5f;
     glm::vec3 nightColor = glm::vec3(0.0f, 0.0f, 0.08f);
     glm::vec3 dayColor = glm::vec3(0.2f, 0.18f, 0.08f);
-    // mix: Sirve para interpolar entre el nightColor y el dayColor
     ambientColor = glm::mix(nightColor, dayColor, t);
     sunIntensity = t * 1.2f;
-
-    Render();
-    flashlight.Update(camera.GetCamPos(), camera.GetCamFront(), dt);
-    camera.Update(dt);
 }
 
 // Recorre todos los objetos de la escena y los envía a renderizar.
@@ -116,10 +130,8 @@ void Scene::Render()
     flashlight.SendToShader(prog);
 
     // Sol y ambiente
-    glUniform3f(glGetUniformLocation(prog, "ambientColor"),
-        ambientColor.r, ambientColor.g, ambientColor.b);
-    glUniform3f(glGetUniformLocation(prog, "sunDirection"),
-        sunDirection.x, sunDirection.y, sunDirection.z);
+    glUniform3f(glGetUniformLocation(prog, "ambientColor"),ambientColor.r, ambientColor.g, ambientColor.b);
+    glUniform3f(glGetUniformLocation(prog, "sunDirection"),sun.position.x, sun.position.y, sun.position.z);
     glUniform1f(glGetUniformLocation(prog, "sunIntensity"), sunIntensity);
 
     // Obtener matrices de cámara actualizadas para este frame
@@ -177,4 +189,14 @@ void Scene::Render()
             * GenerateScaleMatrix(obj.scale);
         RM->DrawModel(*obj.model, matrix, projection, view);
     }
+
+    //Sol y Luna
+    RM->SetColor(sun.color);
+    glm::mat4 matrix = GenerateTranslationMatrix(sun.position) * GenerateScaleMatrix(sun.scale);
+    RM->DrawModel(*sun.model, matrix, projection, view);
+
+    RM->SetColor(moon.color);
+    glm::mat4 moonMatrix = GenerateTranslationMatrix(moon.position) * GenerateScaleMatrix(moon.scale);
+    RM->DrawModel(*moon.model, moonMatrix, projection, view);
+    glEnable(GL_CULL_FACE);
 }
