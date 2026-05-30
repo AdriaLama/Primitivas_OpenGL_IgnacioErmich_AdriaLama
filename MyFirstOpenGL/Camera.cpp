@@ -1,110 +1,58 @@
 ﻿#include "Camera.h"
 #include "RenderManager.h"
 #include "InputManager.h"
-#include "TimeManager.h"
-
-// Posición del troll central: referencia para el Dolly Zoom
-glm::vec3 TROLL_MID = glm::vec3(0.f, 0.f, -0.75f);
 
 void Camera::Update(double dt)
 {
     InputManager* IM = InputManager::GetInstance();
+    float deltaTime = static_cast<float>(dt);
+    float mouseX = IM->GetMouseX();
+    float mouseY = IM->GetMouseY();
 
-    bool k1 = IM->IsKeyPressed(GLFW_KEY_1);
-    bool k2 = IM->IsKeyPressed(GLFW_KEY_2);
-    bool k3 = IM->IsKeyPressed(GLFW_KEY_3);
-
-    //Tecla 1: Plano general del troll izquierdo
-
-    if (k1)
+    if (firstMouse)
     {
-        if (mode == CameraMode::Key1)
-        {
-            mode = CameraMode::Orbit;
-            fFov = 45.f;
-        }
-        else
-        {
-            mode = CameraMode::Key1;
-            fFov = 60.f; 
-            camPos = glm::vec3(0.5f, 1.0f, 0.f);
-            camTarget = glm::vec3(-0.8f, 0.4f, 0.f); // Apunta al troll izquierdo
-        }
+        lastMouseX = mouseX;
+        lastMouseY = mouseY;
+        firstMouse = false;
     }
 
-    //Tecla 2: Plano detalle del troll derecho
+    float offsetX = (mouseX - lastMouseX) * mouseSensitivity;
+    float offsetY = (lastMouseY - mouseY) * mouseSensitivity; 
 
-    if (k2)
-    {
-        if (mode == CameraMode::Key2)
-        {
-            mode = CameraMode::Orbit;
-            fFov = 45.f;
-        }
-        else
-        {
-            mode = CameraMode::Key2;
-            fFov = 20.f; 
-            camPos = glm::vec3(0.1f, 0.8f, 0.f);
-            camTarget = glm::vec3(0.8f, 0.4f, 0.f); // Apunta al troll derecho
-        }
-    }
+    lastMouseX = mouseX;
+    lastMouseY = mouseY;
 
-    //Tecla 3: Dolly Zoom (efecto Vértigo)
-    if (k3)
-    {
-        mode = CameraMode::DollyZoom;
-        dollyTime = 0.f;
-        fFov = 25.f;
-    }
+    yaw += offsetX;
+    pitch += offsetY;
 
-    //Dolly Zoom 
-    if (mode == CameraMode::DollyZoom)
-    {
-        dollyTime += static_cast<float>(dt);
-        float t = dollyTime / dollyDuration; 
+    if (pitch > 89.f) pitch = 89.f;
+    if (pitch < -89.f) pitch = -89.f;
 
-        if (t >= 1.f)
-        {
-            mode = CameraMode::Orbit;
-            fFov = 45.f;
-        }
-        else
-        {
-            float startDist = 1.5f;  // Distancia inicial cámara-troll
-            float startFov = 25.f;  // FOV inicial correspondiente
+    glm::vec3 front;
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    camFront = glm::normalize(front);
 
-            // k es la constante que relaciona distancia y FOV para que el objeto ocupe siempre el mismo tamaño en pantalla
-            float k = startDist * glm::tan(glm::radians(startFov / 2.f));
+   
+    glm::vec3 right = glm::normalize(glm::cross(camFront, camUp));
 
-            // Interpolar la distancia entre la posición inicial y la final
-            float dist = glm::mix(startDist, 6.0f, t);
+    if (IM->currentKeys[GLFW_KEY_W])
+        camPos += camFront * moveSpeed * deltaTime;
 
-            // Calcular el nuevo FOV para que el troll mantenga su tamaño
-            fFov = glm::degrees(2.f * glm::atan(k / dist));
+    if (IM->currentKeys[GLFW_KEY_S])
+        camPos -= camFront * moveSpeed * deltaTime;
 
-            // Mover la cámara hacia atrás manteniendo el target fijo
-            camPos = TROLL_MID + glm::vec3(0.f, 0.5f, dist);
-            camTarget = TROLL_MID + glm::vec3(0.f, 0.4f, 0.f);
-        }
-    }
+    if (IM->currentKeys[GLFW_KEY_A])
+        camPos -= right * moveSpeed * deltaTime;
+
+    if (IM->currentKeys[GLFW_KEY_D])
+        camPos += right * moveSpeed * deltaTime;
 }
 
 glm::mat4 Camera::GetViewMatrix()
 {
-    if (mode == CameraMode::Orbit)
-    {
-        const float radius = 3.f;
-        float t = TimeManager::GetInstance()->GetCurrentTime(); 
-        float camX = sin(t) * radius;
-        float camY = 1.25f;      
-        float camZ = cos(t) * radius;
-        return glm::lookAt(glm::vec3(camX, camY, camZ), glm::vec3(0.f, 0.f, 0.f), localvectorUp);
-    }
-    else
-    {
-        return glm::lookAt(camPos, camTarget, localvectorUp);
-    }
+    return glm::lookAt(camPos, camPos + camFront, camUp);
 }
 
 glm::mat4 Camera::GetProjectionMatrix()

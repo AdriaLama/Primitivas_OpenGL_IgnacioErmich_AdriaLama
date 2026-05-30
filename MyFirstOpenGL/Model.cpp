@@ -1,32 +1,37 @@
-#include "Model.h"
+﻿#include "Model.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <algorithm>  
+
 #include <glm.hpp>
 
-Model::Model(const std::vector<float>& vertexs,
-    const std::vector<float>& uvs,
-    const std::vector<float>& normals)
+Model::Model(const std::vector<float>& vertexs, const std::vector<float>& uvs, const std::vector<float>& normals)
 {
-
     numVertexs = static_cast<unsigned int>(vertexs.size()) / 3;
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &uvVBO);
+    glGenBuffers(1, &normalsVBO);
 
     glBindVertexArray(VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER,vertexs.size() * sizeof(float),vertexs.data(),GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertexs.size() * sizeof(float), vertexs.data(), GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
     glBindBuffer(GL_ARRAY_BUFFER, uvVBO);
-    glBufferData(GL_ARRAY_BUFFER,uvs.size() * sizeof(float),uvs.data(),GL_STATIC_DRAW);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE,2 * sizeof(float), (void*)0);
+    glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(float), uvs.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, normalsVBO);
+    glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(float), normals.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2); 
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -49,18 +54,15 @@ Model LoadOBJModel(const std::string& filePath)
         std::exit(EXIT_FAILURE);
     }
 
-
     std::string line;
     std::stringstream ss;
     std::string prefix;
-    glm::vec3 tmpVec3;  
-    glm::vec2 tmpVec2;  
-
+    glm::vec3 tmpVec3;
+    glm::vec2 tmpVec2;
 
     std::vector<float> tmpVertexs;
     std::vector<float> tmpNormals;
     std::vector<float> tmpTextureCoordinates;
-
 
     std::vector<float> vertexs;
     std::vector<float> vertexNormal;
@@ -92,39 +94,53 @@ Model LoadOBJModel(const std::string& filePath)
             tmpNormals.push_back(tmpVec3.y);
             tmpNormals.push_back(tmpVec3.z);
         }
-
         else if (prefix == "f")
         {
-            int vertexData;
-            short counter = 0;
+            struct FaceVertex { int v = 0, vt = 0, vn = 0; };
+            std::vector<FaceVertex> faceVerts;
 
-
-            while (ss >> vertexData)
+            std::string token;
+            while (ss >> token)
             {
-                switch (counter)
+                FaceVertex fv;
+                std::replace(token.begin(), token.end(), '/', ' ');
+                std::stringstream ts(token);
+                ts >> fv.v;
+                ts >> fv.vt;
+                ts >> fv.vn;
+                faceVerts.push_back(fv);
+            }
+
+            auto addVertex = [&](const FaceVertex& fv)
                 {
-                case 0:
-                    vertexs.push_back(tmpVertexs[((vertexData - 1) * 3)]);
-                    vertexs.push_back(tmpVertexs[((vertexData - 1) * 3) + 1]);
-                    vertexs.push_back(tmpVertexs[((vertexData - 1) * 3) + 2]);
-                    ss.ignore(1, '/');
-                    counter++;
-                    break;
+                    vertexs.push_back(tmpVertexs[(fv.v - 1) * 3]);
+                    vertexs.push_back(tmpVertexs[(fv.v - 1) * 3 + 1]);
+                    vertexs.push_back(tmpVertexs[(fv.v - 1) * 3 + 2]);
 
-                case 1: 
-                    textureCoordinates.push_back(tmpTextureCoordinates[((vertexData - 1) * 2)]);
-                    textureCoordinates.push_back(tmpTextureCoordinates[((vertexData - 1) * 2) + 1]);
-                    ss.ignore(1, '/');
-                    counter++;
-                    break;
+                    if (fv.vt > 0 && !tmpTextureCoordinates.empty())
+                    {
+                        textureCoordinates.push_back(tmpTextureCoordinates[(fv.vt - 1) * 2]);
+                        textureCoordinates.push_back(tmpTextureCoordinates[(fv.vt - 1) * 2 + 1]);
+                    }
+                    else
+                    {
+                        textureCoordinates.push_back(0.f);
+                        textureCoordinates.push_back(0.f);
+                    }
+       
+                    if (fv.vn > 0 && !tmpNormals.empty())
+                    {
+                        vertexNormal.push_back(tmpNormals[(fv.vn - 1) * 3]);
+                        vertexNormal.push_back(tmpNormals[(fv.vn - 1) * 3 + 1]);
+                        vertexNormal.push_back(tmpNormals[(fv.vn - 1) * 3 + 2]);
+                    }
+                };
 
-                case 2:
-                    vertexNormal.push_back(tmpNormals[((vertexData - 1) * 3)]);
-                    vertexNormal.push_back(tmpNormals[((vertexData - 1) * 3) + 1]);
-                    vertexNormal.push_back(tmpNormals[((vertexData - 1) * 3) + 2]);
-                    counter = 0;
-                    break;
-                }
+            for (size_t i = 1; i + 1 < faceVerts.size(); i++)
+            {
+                addVertex(faceVerts[0]);
+                addVertex(faceVerts[i]);
+                addVertex(faceVerts[i + 1]);
             }
         }
     }
