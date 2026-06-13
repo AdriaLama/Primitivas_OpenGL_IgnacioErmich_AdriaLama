@@ -33,6 +33,5 @@ void Flashlight::SendToShader(GLuint program) const
 
     glUniform1f(glGetUniformLocation(program, "flashlightRange"), range);
 
-    glUniform1f(glGetUniformLocation(program, "flashlightIntensity"), intensity);
 
 }
