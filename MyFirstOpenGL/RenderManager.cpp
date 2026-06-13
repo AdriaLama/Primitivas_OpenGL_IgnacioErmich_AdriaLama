@@ -155,6 +155,10 @@ void RenderManager::DrawModel(const Model& model, const glm::mat4& transform, gl
     glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(viewMatrix));
     glUniformMatrix4fv(glGetUniformLocation(program, "transform"), 1, GL_FALSE, glm::value_ptr(transform));
     glUniform1i(glGetUniformLocation(program, "hasTexture"), 1);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, model.textureID);
+
     model.Render();
 }
 
