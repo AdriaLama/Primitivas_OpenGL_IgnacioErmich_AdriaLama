@@ -129,7 +129,9 @@ void Scene::DayNightCycle(float dt)
     sun.position = sunPos;
     moon.position = -sunPos;// La luna esta siempre en el lado opuesto al sol
 
-    dayNightTime += fmod(dt, CYCLE_DURATION) / CYCLE_DURATION;
+    dayNightTime += dt / CYCLE_DURATION;
+    if (dayNightTime >= 1.f) 
+        dayNightTime -= 1.f;
 
 }
 
