@@ -24,7 +24,6 @@ uniform vec3 flashlightDir;
 uniform float flashlightInnerCone;
 uniform float flashlightOuterCone;
 uniform float flashlightRange;
-uniform float flashlightIntensity;
 
 void main()
 {
@@ -53,14 +52,13 @@ void main()
     vec3 spotlight = vec3(0.0);
     if (flashlightOn == 1)
     {
-        vec3 lightDir = normalize(flashlightPos - fragWorldPos);
-        float distance = length(flashlightPos - fragWorldPos);
-        float theta = dot(lightDir, normalize(-flashlightDir));
-        float epsilon = flashlightInnerCone - flashlightOuterCone;
-        float intensity = clamp((theta - flashlightOuterCone) / epsilon, 0.0, 1.0);
-        float attenuation = 1.0 / (distance * distance);
-        float diffuseAngle = max(dot(normal, lightDir), 0.0);
-        spotlight = baseColor.rgb * intensity * attenuation * diffuseAngle * flashlightIntensity;
+        vec3 toLight = normalize(flashlightPos - fragWorldPos);
+        float dist = length(flashlightPos - fragWorldPos);
+        float angle = dot(toLight, normalize(-flashlightDir));
+        float coneBlend = clamp((angle - flashlightOuterCone) / (flashlightInnerCone - flashlightOuterCone), 0.0, 1.0);
+        float range = 1.0 / (dist/flashlightRange * dist/flashlightRange);
+
+        spotlight = baseColor.rgb * coneBlend * range;
     }
 
     fragColor = vec4(clamp(ambient + sun + spotlight, 0.0, 1.0), baseColor.a);
