@@ -45,6 +45,8 @@ void Scene::LoadModels()
     models[3].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/skull.jpg");
     models[4].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/sun.jpg");
     models[5].textureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/moon.png");
+
+    dayNightTextureID = RenderManager::GetInstance()->LoadTexture("Assets/Textures/DayNightCycle.png");
 }
 
 void Scene::SpawnObjects()
@@ -127,12 +129,8 @@ void Scene::DayNightCycle(float dt)
     sun.position = sunPos;
     moon.position = -sunPos;// La luna esta siempre en el lado opuesto al sol
 
-    // t = 0 de noche, t = 1 de dia
-    float t = (sin(rad) + 1.f) * 0.5f;
-    glm::vec3 nightColor = glm::vec3(.08f, 0.08f, 0.2f);
-    glm::vec3 dayColor = glm::vec3(0.4f, 0.35f, 0.1f);
-    ambientColor = glm::mix(nightColor, dayColor, t);
-    sunIntensity = t * 1.2f;
+    dayNightTime += fmod(dt, CYCLE_DURATION) / CYCLE_DURATION;
+
 }
 
 void Scene::RenderFloor(glm::mat4 projection, glm::mat4 view)
@@ -212,9 +210,15 @@ void Scene::Render()
 
     flashlight.SendToShader(prog);
 
-    glUniform3f(glGetUniformLocation(prog, "ambientColor"), ambientColor.r, ambientColor.g, ambientColor.b);
     glUniform3f(glGetUniformLocation(prog, "sunDirection"), sun.position.x, sun.position.y, sun.position.z);
-    glUniform1f(glGetUniformLocation(prog, "sunIntensity"), sunIntensity);
+    glUniform1f(glGetUniformLocation(prog, "dayNightTime"), dayNightTime);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, dayNightTextureID);
+    glUniform1i(glGetUniformLocation(prog, "dayNightSampler"), 1);
+
+    glActiveTexture(GL_TEXTURE0);
+    glUniform1i(glGetUniformLocation(prog, "textureSampler"), 0);
 
     glm::mat4 projection = camera.GetProjectionMatrix();
     glm::mat4 view = camera.GetViewMatrix();

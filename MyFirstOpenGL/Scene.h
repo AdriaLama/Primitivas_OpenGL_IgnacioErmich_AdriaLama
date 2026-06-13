@@ -44,6 +44,8 @@ private:
     glm::vec3 ambientColor;
     float sunIntensity;
     float CYCLE_DURATION = 20.f;
+    GLuint dayNightTextureID;
+    float dayNightTime = 0.f;
 
     void Render();
     void DayNightCycle(float dt);
