@@ -21,10 +21,7 @@ private:
     float outerConeAngle = 20.0f;
 
     // Alcance maximo de la luz
-    float range = 10.f;
-
-    //Intensidad de la luz
-    float intensity = 8.5f;
+    float range = 2.5f;
 
     // Estado on/off
     bool isOn = false;
