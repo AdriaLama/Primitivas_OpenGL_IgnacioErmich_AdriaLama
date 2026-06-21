@@ -22,11 +22,10 @@ void Camera::Update(double dt)
     lastMouseX = mouseX;
     lastMouseY = mouseY;
 
+    //Calculo de la posicion de la camara
+
     yaw += offsetX;
     pitch += offsetY;
-
-    if (pitch > 89.f) pitch = 89.f;
-    if (pitch < -89.f) pitch = -89.f;
 
     glm::vec3 front;
     front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
@@ -37,6 +36,7 @@ void Camera::Update(double dt)
    
     glm::vec3 right = glm::normalize(glm::cross(camFront, camUp));
 
+    //Utilizamos Input Manager para el movimiento de la camara
     if (IM->currentKeys[GLFW_KEY_W])
         camPos += camFront * moveSpeed * deltaTime;
 

@@ -59,12 +59,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="MyFirstFragmentShader.glsl">
-      <Filter>Shaders\Fragment Shader</Filter>
-    </None>
-    <None Include="CameraVertexShader.glsl">
-      <Filter>Shaders\Vertex Shader</Filter>
-    </None>
     <None Include="VertexShader.glsl">
       <Filter>Shaders\Vertex Shader</Filter>
     </None>

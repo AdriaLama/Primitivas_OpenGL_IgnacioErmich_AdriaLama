@@ -9,6 +9,8 @@ void Flashlight::Update(const glm::vec3& camPos, const glm::vec3& camFront, floa
 
     InputManager* IM = InputManager::GetInstance();
 
+    //On/Off de la camara
+
     static bool wasPressed = false;
     bool isPressed = IM->IsKeyPressed(GLFW_KEY_F); 
 
@@ -21,6 +23,9 @@ void Flashlight::Update(const glm::vec3& camPos, const glm::vec3& camFront, floa
 
 void Flashlight::SendToShader(GLuint program) const
 {
+
+    //Enviamos variables para la linterna al fragment
+
     glUniform1i(glGetUniformLocation(program, "flashlightOn"), isOn ? 1 : 0);
 
     glUniform3f(glGetUniformLocation(program, "flashlightPos"), position.x, position.y, position.z);

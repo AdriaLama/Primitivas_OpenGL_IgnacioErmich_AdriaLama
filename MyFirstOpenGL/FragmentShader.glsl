@@ -19,7 +19,6 @@ uniform vec3 flashlightPos;
 uniform vec3 flashlightDir;
 uniform float flashlightInnerCone;
 uniform float flashlightOuterCone;
-uniform float flashlightRange;
 
 void main()
 {
@@ -41,13 +40,20 @@ void main()
     vec3 spotlight = vec3(0.0);
     if (flashlightOn == 1)
     {
-        vec3 toLight = normalize(flashlightPos - fragWorldPos);
-        float dist = length(flashlightPos - fragWorldPos);
-        float angle = dot(toLight, normalize(-flashlightDir));
-        float coneBlend = clamp((angle - flashlightOuterCone) / (flashlightInnerCone - flashlightOuterCone), 0.0, 1.0);
-        float range = 1.0 / (dist/flashlightRange * dist/flashlightRange);
+        vec3 directionLight = normalize(flashlightPos - fragWorldPos); //Direccion hacia la linterna
+        float distance = length(flashlightPos - fragWorldPos); //Distancia real a la linterna
+        float attenuation = 1.0 / distance * distance;   //Atenuacion cuadratica por distancia, pierde intensidad según la distancia
 
-        spotlight = baseColor.rgb * coneBlend * range;
+        // Calcula el coseno del ángulo entre la dirección hacia la luz y la dirección de la linterna invertida
+        float theta = dot(directionLight, normalize(-flashlightDir)); 
+
+        // Diferencia entre el coseno del cono interno y el externo, define el ancho de la zona de transición 
+        float epsilon = flashlightInnerCone - flashlightOuterCone;
+
+        // Normaliza theta dentro del rango [outerCone, innerCone] y lo limita entre 0 y 1 para suavizar el borde del cono
+        float intensityCone = clamp((theta - flashlightOuterCone) / epsilon, 0.0, 1.0);
+
+        spotlight = baseColor.rgb * attenuation * intensityCone;
     }
 
     fragColor = vec4(clamp(baseColor.rgb + spotlight, 0.0, 1.0), baseColor.a);

@@ -7,6 +7,8 @@
 
 void Scene::InitSpawnPoints()
 {
+    //Creamos diferentes spawnpoints y los metemos en un vector
+
     spawnPoints = {
         glm::vec3(-1.f,  0.f,  1.f),
         glm::vec3(0.f,  0.f,  1.f),
@@ -72,6 +74,8 @@ void Scene::SpawnObjects()
 
 void Scene::RandomizeObjects()
 {
+    //Asignamos rotacion y escala aleatoria a cada objeto
+
     for (RenderObject& obj : trolls) {
         obj.rotation.y = rand() % 361;
         obj.scale = glm::vec3(0.2f + (rand() % 100) / 100.f * (0.5f - 0.2f));
@@ -129,6 +133,7 @@ void Scene::DayNightCycle(float dt)
     sun.position = sunPos;
     moon.position = -sunPos;// La luna esta siempre en el lado opuesto al sol
 
+    // Avanza el progreso del ciclo día/noche según el tiempo transcurrido
     dayNightTime += dt / CYCLE_DURATION;
     if (dayNightTime >= 1.f) 
         dayNightTime -= 1.f;
@@ -211,6 +216,8 @@ void Scene::Render()
     GLuint prog = RM->GetProgram();
 
     flashlight.SendToShader(prog);
+
+    // Pasa al shader la dirección del sol, el tiempo del ciclo día/noche y la textura asociada
 
     glUniform3f(glGetUniformLocation(prog, "sunDirection"), sun.position.x, sun.position.y, sun.position.z);
     glUniform1f(glGetUniformLocation(prog, "dayNightTime"), dayNightTime);
